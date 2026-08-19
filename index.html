@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>tt 9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>ㅁㅁㅁ 9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -158,7 +158,7 @@
             background-color: var(--bg-color);
         }
 
-        /* 🗺️ 네이버 지도 다크 톤 필터 */
+        /* 🗺️ 네이버 지도 다크 톤 필터 (타일만 정밀 반전) */
         #map {
             width: 100%;
             height: 100%;
@@ -325,7 +325,7 @@
             white-space: nowrap;
         }
 
-        /* 🎛️ 정렬 필터 + 리스트/카드 모드 바 */
+        /* 🎛️ 필터 + 리스트/카드 모드 바 */
         .filter-controls-row {
             display: flex;
             gap: 4px;
@@ -852,7 +852,7 @@
             display: block;
         }
 
-        /* ⭐ 대표사진 지정 체크 버튼 */
+        /* ⭐ 대표사진 지정 버튼 */
         .set-rep-img-btn {
             position: absolute;
             top: 10px;
@@ -1218,7 +1218,6 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
-        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1232,11 +1231,11 @@
             </div>
 
             <div class="search-row">
-                <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)" autocomplete="off" autocorrect="off" />
+                <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 선택적 고립 캠핑장)" autocomplete="off" autocorrect="off" />
                 <button type="button" id="search-btn">검색</button>
             </div>
 
-            <!-- 🎛️ 필터 + 리스트/카드 모드 바 -->
+            <!-- 필터 + 리스트/카드 모드 바 -->
             <div class="filter-controls-row">
                 <div class="sort-filter-bar">
                     <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
@@ -1266,7 +1265,6 @@
         <div class="detail-slider-wrap" id="detail-slider">
             <div class="detail-slider-track" id="slider-track"></div>
             
-            <!-- ⭐ 대표사진 지정 버튼 -->
             <button type="button" class="set-rep-img-btn" id="set-rep-img-btn" title="현재 사진을 대표사진으로 설정">
                 <span id="rep-icon">✓</span> <span id="rep-text">대표 지정</span>
             </button>
@@ -1493,7 +1491,7 @@
         });
     });
 
-    // 📋 [리스트 / 카드] 뷰 모드 토글 이벤트
+    // 📋 [리스트 / 카드] 뷰 모드 토글
     const viewModeBtn = document.getElementById('view-mode-btn');
     const viewModeIcon = document.getElementById('view-mode-icon');
     const viewModeText = document.getElementById('view-mode-text');
@@ -1589,28 +1587,29 @@
     async function fetchPlaceImages(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
+            const cleanName = placeName.replace(/(캠핑장|야영장|오토캠핑장|글램핑|캠핑)$/g, '').trim() || placeName;
 
             const group1Queries = [
-                `"${placeName}" 캠핑장 전경`,
-                `"${placeName}" 배치도`,
-                `"${placeName}" 안내도`,
-                `"${placeName}" 입구`,
-                `"${placeName}" 전경`
+                `"${cleanName}" 캠핑장 전경`,
+                `"${cleanName}" 배치도`,
+                `"${cleanName}" 안내도`,
+                `"${cleanName}" 입구`,
+                `${cleanName} 캠핑장 전경`
             ];
 
             const group2Queries = [
-                `"${placeName}" 화장실`,
-                `"${placeName}" 샤워실`,
-                `"${placeName}" 개수대`,
-                `"${placeName}" 매점`
+                `"${cleanName}" 화장실`,
+                `"${cleanName}" 샤워실`,
+                `"${cleanName}" 개수대`,
+                `"${cleanName}" 매점`
             ];
 
             const group3Queries = [
-                `"${placeName}" 사이트`,
-                `"${placeName}" 데크`,
-                `"${placeName}" 텐트`,
-                `"${placeName}" 캠핑장`,
-                `${placeName} ${cleanAddr} 캠핑`
+                `"${cleanName}" 사이트`,
+                `"${cleanName}" 데크`,
+                `"${cleanName}" 텐트`,
+                `${cleanName} 캠핑장`,
+                `${cleanName} ${cleanAddr}`
             ];
 
             const fetchQuery = async (query, size = 6) => {
@@ -1661,7 +1660,7 @@
         }
     }
 
-    // 💡 스마트 4단계 연쇄 검색 엔진 (형태소/띄어쓰기 불일치 완벽 해결)
+    // 💡 스마트 하이브리드 연쇄 검색 헬퍼들
     const searchInput = document.getElementById('camp-search-input');
     const searchBtn = document.getElementById('search-btn');
     const resultsBox = document.getElementById('search-results-box');
@@ -1672,7 +1671,7 @@
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
     closeSearchBtn.addEventListener('click', () => { resultsBox.style.display = 'none'; });
 
-    async function searchKakaoPlaces(keyword) {
+    async function searchKakaoPlacesSDK(keyword) {
         return new Promise((resolve) => {
             if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
                 const ps = new kakao.maps.services.Places();
@@ -1689,7 +1688,7 @@
         });
     }
 
-    async function searchKakaoRest(keyword) {
+    async function searchKakaoRestKeyword(keyword) {
         try {
             const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(keyword)}`;
             const response = await fetch(restUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } });
@@ -1701,6 +1700,92 @@
         return null;
     }
 
+    async function searchKakaoAddress(addr) {
+        try {
+            const restUrl = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(addr)}`;
+            const response = await fetch(restUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } });
+            if (response.ok) {
+                const resData = await response.json();
+                if (resData.documents && resData.documents.length > 0) {
+                    const doc = resData.documents[0];
+                    return {
+                        x: parseFloat(doc.x),
+                        y: parseFloat(doc.y),
+                        road_address_name: doc.road_address ? doc.road_address.address_name : '',
+                        address_name: doc.address ? doc.address.address_name : doc.address_name
+                    };
+                }
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    // 🌐 웹/블로그/지식백과 문서 기반 실시간 주소 및 전화번호 자동 추출 (신생/비공식 상호명 대응)
+    async function searchWebAndBlogFallback(keyword) {
+        try {
+            const blogUrl = `https://dapi.kakao.com/v2/search/blog?query=${encodeURIComponent(keyword)}&size=10`;
+            const webUrl = `https://dapi.kakao.com/v2/search/web?query=${encodeURIComponent(keyword)}&size=10`;
+            
+            const [blogRes, webRes] = await Promise.all([
+                fetch(blogUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } }).then(r => r.ok ? r.json() : { documents: [] }).catch(() => ({ documents: [] })),
+                fetch(webUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } }).then(r => r.ok ? r.json() : { documents: [] }).catch(() => ({ documents: [] }))
+            ]);
+
+            const allDocs = [...(blogRes.documents || []), ...(webRes.documents || [])];
+            if (allDocs.length === 0) return null;
+
+            const addrRegex = /(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)(?:특별자치도|도|특별시|광역시|특별자치시)?\s+[가-힣]+(?:시|군|구)?\s+[가-힣0-9\s\-]+(?:로|길|번길|면|리|동)\s*[0-9\-]+(?:번지)?/g;
+            const phoneRegex = /(01[016789]-?\d{3,4}-?\d{4}|0507-?\d{4}-?\d{4}|0\d{1,2}-?\d{3,4}-?\d{4})/;
+
+            const foundAddresses = [];
+            const seenAddr = new Set();
+            let extractedPhone = '';
+
+            for (const doc of allDocs) {
+                const text = `${doc.title || ''} ${doc.contents || ''}`.replace(/<[^>]*>?/gm, '');
+                
+                if (!extractedPhone) {
+                    const pMatch = text.match(phoneRegex);
+                    if (pMatch) extractedPhone = pMatch[0];
+                }
+
+                const aMatches = text.match(addrRegex);
+                if (aMatches) {
+                    for (const rawAddr of aMatches) {
+                        const trimmed = rawAddr.trim();
+                        if (!seenAddr.has(trimmed) && trimmed.length > 8) {
+                            seenAddr.add(trimmed);
+                            foundAddresses.push(trimmed);
+                        }
+                    }
+                }
+            }
+
+            if (foundAddresses.length === 0) return null;
+
+            const items = [];
+            for (const addr of foundAddresses.slice(0, 3)) {
+                const geo = await searchKakaoAddress(addr);
+                if (geo) {
+                    items.push({
+                        place_name: keyword,
+                        road_address_name: geo.road_address_name || geo.address_name,
+                        address_name: geo.address_name || geo.road_address_name,
+                        x: geo.x,
+                        y: geo.y,
+                        phone: extractedPhone,
+                        category_name: '캠핑,야영장',
+                        place_url: `https://map.kakao.com/link/search/${encodeURIComponent(keyword)}`
+                    });
+                }
+            }
+
+            return items.length > 0 ? items : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     async function performSearch() {
         const rawQuery = searchInput.value.trim();
         if (!rawQuery) { showToast("캠핑장 이름을 입력해주세요."); return; }
@@ -1708,7 +1793,6 @@
         searchBtn.innerText = "검색중..";
         searchBtn.disabled = true;
 
-        // 검색어 지능형 정규화 후보군 생성
         const cleanQuery = rawQuery.replace(/(캠핑장|야영장|오토캠핑장|글램핑|캠핑)$/g, '').trim();
         const noSpaceQuery = rawQuery.replace(/\s+/g, '');
         const cleanNoSpaceQuery = cleanQuery.replace(/\s+/g, '');
@@ -1722,14 +1806,20 @@
 
         let foundItems = null;
 
+        // 1. 카카오 로컬 장소 검색 연쇄 시도
         for (const q of queryVariations) {
-            foundItems = await searchKakaoPlaces(q);
+            foundItems = await searchKakaoPlacesSDK(q);
             if (!foundItems) {
-                foundItems = await searchKakaoRest(q);
+                foundItems = await searchKakaoRestKeyword(q);
             }
             if (foundItems && foundItems.length > 0) {
                 break;
             }
+        }
+
+        // 2. 카카오 장소 검색에 없는 경우, 웹/블로그 문서 기반 주소 추출 시도
+        if (!foundItems || foundItems.length === 0) {
+            foundItems = await searchWebAndBlogFallback(rawQuery);
         }
 
         searchBtn.innerText = "검색";
@@ -1776,7 +1866,7 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 핀 추가 및 DB 저장 (15장 갤러리 이미지 동시 저장)
+    // 핀 추가 및 DB 저장
     async function addPlaceToDatabase(name, roadAddr, jibunAddr, phone, category, kakaoUrl, lat, lng) {
         try {
             showToast(`'${name}' 갤러리 사진들을 수집 중...`, 1800);
