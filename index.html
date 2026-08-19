@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>ㅁㅁ9/11~9/13 2박 - 캠핑장 아카이브</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -221,7 +221,6 @@
             transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* PC 화면 확장 상태 (그리드 레이아웃) */
         #sidebar-panel.expanded {
             width: 840px;
         }
@@ -311,7 +310,6 @@
             white-space: nowrap;
         }
 
-        /* 🎛️ 정렬 필터 탭 바 */
         .sort-filter-bar {
             display: flex;
             gap: 4px;
@@ -654,8 +652,8 @@
         #detail-modal {
             position: fixed;
             inset: 0;
-            background: rgba(19, 23, 26, 0.75);
-            backdrop-filter: blur(4px);
+            background: rgba(19, 23, 26, 0.78);
+            backdrop-filter: blur(5px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -668,43 +666,109 @@
             max-width: 440px;
             background: var(--c-charcoal);
             border: 1px solid var(--c-earth);
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.55);
             display: flex;
             flex-direction: column;
             max-height: 90vh;
         }
 
-        .detail-img-wrap {
+        /* 📸 최대 15장 갤러리 슬라이더 영역 */
+        .detail-slider-wrap {
             position: relative;
             width: 100%;
-            height: 200px;
-            background: #232A30;
+            height: 220px;
+            background: #1d2226;
+            overflow: hidden;
+            user-select: none;
+            touch-action: pan-y;
         }
 
-        .detail-img {
+        .detail-slider-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .detail-slide {
+            min-width: 100%;
+            width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #181d21;
+        }
+
+        .detail-slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
 
+        .slider-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(33, 38, 43, 0.75);
+            color: var(--text-main);
+            border: 1px solid var(--c-earth);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 14px;
+            font-weight: 800;
+            backdrop-filter: blur(2px);
+            transition: 0.15s;
+        }
+        .slider-nav-btn:hover {
+            background: var(--c-blue);
+            border-color: #fff;
+        }
+        #slider-prev { left: 8px; }
+        #slider-next { right: 8px; }
+
+        .slide-counter-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 12px;
+            background: rgba(20, 24, 28, 0.82);
+            color: var(--text-main);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--c-earth);
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
         .detail-close-btn {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(35, 42, 48, 0.85);
+            background: rgba(33, 38, 43, 0.85);
             color: var(--text-main);
             border: 1px solid var(--c-earth);
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            z-index: 12;
+            backdrop-filter: blur(2px);
         }
 
         .detail-body {
@@ -723,7 +787,7 @@
         }
 
         .detail-title {
-            font-size: 1.25em;
+            font-size: 1.22em;
             font-weight: 800;
             color: var(--text-main);
             display: flex;
@@ -986,7 +1050,6 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
-        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1004,7 +1067,7 @@
                 <button type="button" id="search-btn">검색</button>
             </div>
 
-            <!-- 🎛️ 추천순 / 별양거리순 / 망원거리순 정렬 필터 바 -->
+            <!-- 정렬 필터 바 -->
             <div class="sort-filter-bar">
                 <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
                 <button type="button" class="sort-btn" data-sort="byeolyang">별양거리순</button>
@@ -1023,13 +1086,17 @@
     </div>
 </div>
 
-<!-- 🌁 UX 브릿지 상세정보 팝업 모달 -->
+<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (15장 갤러리 슬라이더 탑재) -->
 <div id="detail-modal">
     <div class="detail-box">
-        <div class="detail-img-wrap">
-            <img class="detail-img" id="modal-img" referrerpolicy="no-referrer" src="" alt="전경 사진" onerror="this.src=DEFAULT_THUMB" />
+        <div class="detail-slider-wrap" id="detail-slider">
+            <div class="detail-slider-track" id="slider-track"></div>
+            <button type="button" class="slider-nav-btn" id="slider-prev">‹</button>
+            <button type="button" class="slider-nav-btn" id="slider-next">›</button>
+            <div class="slide-counter-badge" id="slide-counter">1 / 1</div>
             <button type="button" class="detail-close-btn" id="modal-close-btn">✕</button>
         </div>
+
         <div class="detail-body">
             <div class="detail-header-row">
                 <div class="detail-title" id="modal-title"></div>
@@ -1170,7 +1237,7 @@
         desktopExpandText.textContent = isExp ? '원래대로' : '넓게보기';
     });
 
-    // 📱 iOS 네이티브급 드래그 제스처 & 탭 토글 바텀시트
+    // 📱 iOS 네이티브급 드래그 제스처 바텀시트
     const sheetHandle = document.getElementById('sheet-handle');
 
     let startY = 0;
@@ -1307,87 +1374,86 @@
         return results;
     }
 
-    // 💡 고화질 원본 우선 선별 및 시설 제외 정밀 함수
-    async function fetchPlaceImage(placeName, placeAddress) {
+    // 📸 15장 체계적 수집 알고리즘 (1: 전경/입구/지도 -> 2: 편의시설 -> 3: 사이트/데크)
+    async function fetchPlaceImages(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
-            const searchQueries = [
+
+            // 1그룹: 전경 / 입구 / 안내도·배치도
+            const group1Queries = [
                 `"${placeName}" 캠핑장 전경`,
-                `"${placeName}" 캠핑장 사이트`,
-                `"${placeName}" 캠핑장 야경`,
-                `"${placeName}" 캠핑장`,
-                `${placeName} ${cleanAddr} 캠핑장`
+                `"${placeName}" 배치도`,
+                `"${placeName}" 안내도`,
+                `"${placeName}" 입구`,
+                `"${placeName}" 전경`
             ];
 
-            const candidateMap = new Map();
+            // 2그룹: 편의시설 (화장실, 샤워실, 개수대, 매점)
+            const group2Queries = [
+                `"${placeName}" 화장실`,
+                `"${placeName}" 샤워실`,
+                `"${placeName}" 개수대`,
+                `"${placeName}" 매점`
+            ];
 
-            const fetchPromises = searchQueries.map(query => {
-                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=10&sort=accuracy`;
-                return fetch(imgUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } })
-                    .then(res => res.ok ? res.json() : { documents: [] })
-                    .then(data => data.documents || [])
-                    .catch(() => []);
-            });
+            // 3그룹: 사이트별 / 데크 / 텐트 피칭
+            const group3Queries = [
+                `"${placeName}" 사이트`,
+                `"${placeName}" 데크`,
+                `"${placeName}" 텐트`,
+                `"${placeName}" 캠핑장`,
+                `${placeName} ${cleanAddr} 캠핑`
+            ];
 
-            const results = await Promise.all(fetchPromises);
-            results.flat().forEach(item => {
-                const key = item.image_url || item.thumbnail_url;
-                if (key && !candidateMap.has(key)) {
-                    candidateMap.set(key, item);
+            const fetchQuery = async (query, size = 6) => {
+                try {
+                    const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=${size}&sort=accuracy`;
+                    const res = await fetch(imgUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } });
+                    if (!res.ok) return [];
+                    const data = await res.json();
+                    return (data.documents || []).map(doc => doc.image_url || doc.thumbnail_url).filter(Boolean);
+                } catch (e) {
+                    return [];
                 }
-            });
+            };
 
-            const candidates = Array.from(candidateMap.values());
-            if (candidates.length === 0) return DEFAULT_THUMB;
+            const [g1Results, g2Results, g3Results] = await Promise.all([
+                Promise.all(group1Queries.map(q => fetchQuery(q, 4))).then(r => r.flat()),
+                Promise.all(group2Queries.map(q => fetchQuery(q, 4))).then(r => r.flat()),
+                Promise.all(group3Queries.map(q => fetchQuery(q, 6))).then(r => r.flat())
+            ]);
 
-            function scoreImage(item) {
-                const url = (item.image_url || '').toLowerCase();
-                const thumb = (item.thumbnail_url || '').toLowerCase();
-                const siteName = (item.display_sitename || '').toLowerCase();
-                const docUrl = (item.doc_url || '').toLowerCase();
-                let combined = `${url} ${thumb} ${siteName} ${docUrl}`;
-                try { combined = decodeURIComponent(combined); } catch (e) {}
+            const finalImages = [];
+            const seen = new Set();
 
-                // 시설 사진 절대 배제
-                if (/(화장실|샤워실|개수대|세면대|변기|소변기|욕실|toilet|restroom|washroom|bathroom|shower|wash)/i.test(combined)) {
-                    return -999;
+            const appendUnique = (list, limit) => {
+                let count = 0;
+                for (const url of list) {
+                    if (count >= limit || finalImages.length >= 15) break;
+                    if (!seen.has(url)) {
+                        seen.add(url);
+                        finalImages.push(url);
+                        count++;
+                    }
                 }
+            };
 
-                let score = 0;
-                if (/(메뉴|가격표|영수증|예약|식단|요금표|식당|고기|삼겹살|바베큐|bbq|불판|먹방|안주|밀키트|음식)/i.test(combined)) score -= 50;
-                if (/(지도|배치도|약도|위치도|안내도|map)/i.test(combined)) score -= 30;
-                if (/(방|침대|원룸|객실내부|팬션내부|실내|룸컨디션|거실)/i.test(combined)) score -= 25;
+            // 1단계: 전경/입구/지도 4장
+            appendUnique(g1Results, 4);
+            // 2단계: 편의시설 5장
+            appendUnique(g2Results, 5);
+            // 3단계: 사이트/데크/피칭 (최대 15장까지 채움)
+            appendUnique(g3Results, 15 - finalImages.length);
 
-                if (/(전경|풍경|야경|사이트|데크|잔디|텐트|타프|캠핑|피칭|불멍|숲|마운틴|호수|노을|일몰|view)/i.test(combined)) score += 25;
-                if (combined.includes(placeName.toLowerCase())) score += 15;
+            // 잔여 후보로 보충
+            const remaining = [...g1Results, ...g3Results, ...g2Results];
+            appendUnique(remaining, 15 - finalImages.length);
 
-                const w = Number(item.width || 0);
-                const h = Number(item.height || 0);
-                if (w > 0 && h > 0) {
-                    const ratio = w / h;
-                    if (ratio >= 1.2 && ratio <= 2.2) score += 10;
-                    else if (ratio < 1.0) score -= 5;
-                }
-
-                return score;
-            }
-
-            const scoredCandidates = candidates.map(item => ({
-                item,
-                score: scoreImage(item)
-            })).sort((a, b) => b.score - a.score);
-
-            if (scoredCandidates.length > 0 && scoredCandidates[0].score > -100) {
-                const best = scoredCandidates[0].item;
-                // 고화질 원본 우선 반환
-                return best.image_url || best.thumbnail_url;
-            }
-
-            return candidates[0].image_url || candidates[0].thumbnail_url || DEFAULT_THUMB;
+            return finalImages.length > 0 ? finalImages : [DEFAULT_THUMB];
 
         } catch (err) {
-            console.warn("이미지 선별 오류:", err);
-            return DEFAULT_THUMB;
+            console.warn("다중 사진 수집 오류:", err);
+            return [DEFAULT_THUMB];
         }
     }
 
@@ -1486,12 +1552,13 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 핀 추가 및 DB 저장
+    // 핀 추가 및 DB 저장 (15장 갤러리 이미지 동시 저장)
     async function addPlaceToDatabase(name, roadAddr, jibunAddr, phone, category, kakaoUrl, lat, lng) {
         try {
-            showToast(`'${name}' 대표 전경 사진 선별 중...`, 1500);
+            showToast(`'${name}' 갤러리 사진들을 수집 중...`, 1800);
             
-            const realImg = await fetchPlaceImage(name, roadAddr || jibunAddr);
+            const imagesList = await fetchPlaceImages(name, roadAddr || jibunAddr);
+            const repImg = imagesList[0] || DEFAULT_THUMB;
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
             
             const newSiteRef = push(ref(db, 'sites'));
@@ -1506,7 +1573,8 @@
                 url: naverSearchUrl,
                 lat: lat,
                 lng: lng,
-                img: realImg,
+                img: repImg,
+                images: imagesList,
                 recommender: currentUser,
                 likes: {},
                 comments: {}
@@ -1514,7 +1582,7 @@
 
             searchInput.value = '';
             resultsBox.style.display = 'none';
-            showToast(`'${name}' 핀이 추가되었습니다!`);
+            showToast(`'${name}' 핀과 갤러리가 추가되었습니다!`);
 
             if (map) {
                 map.setCenter(new naver.maps.LatLng(lat, lng));
@@ -1526,25 +1594,88 @@
         }
     }
 
-    // 🌁 UX 브릿지 상세정보 팝업 모달
+    // 🌁 15장 스와이프 갤러리 슬라이더 & UX 브릿지 모달
     const detailModal = document.getElementById('detail-modal');
     const modalCloseBtn = document.getElementById('modal-close-btn');
+    const sliderTrack = document.getElementById('slider-track');
+    const sliderPrevBtn = document.getElementById('slider-prev');
+    const sliderNextBtn = document.getElementById('slider-next');
+    const slideCounter = document.getElementById('slide-counter');
+
+    let currentSlideIdx = 0;
+    let currentSlideCount = 1;
 
     modalCloseBtn.addEventListener('click', () => { detailModal.style.display = 'none'; });
     detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.style.display = 'none'; });
 
-    window.openDetailBridge = (siteId) => {
+    function updateSliderPosition() {
+        sliderTrack.style.transform = `translateX(-${currentSlideIdx * 100}%)`;
+        slideCounter.textContent = `${currentSlideIdx + 1} / ${currentSlideCount}`;
+        sliderPrevBtn.style.opacity = currentSlideIdx === 0 ? '0.3' : '1';
+        sliderNextBtn.style.opacity = currentSlideIdx === currentSlideCount - 1 ? '0.3' : '1';
+    }
+
+    sliderPrevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentSlideIdx > 0) {
+            currentSlideIdx--;
+            updateSliderPosition();
+        }
+    });
+
+    sliderNextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentSlideIdx < currentSlideCount - 1) {
+            currentSlideIdx++;
+            updateSliderPosition();
+        }
+    });
+
+    // 터치 스와이프 제스처
+    let sliderTouchStartX = 0;
+    const sliderWrap = document.getElementById('detail-slider');
+
+    sliderWrap.addEventListener('touchstart', (e) => {
+        sliderTouchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    sliderWrap.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const diffX = sliderTouchStartX - touchEndX;
+
+        if (diffX > 40 && currentSlideIdx < currentSlideCount - 1) {
+            currentSlideIdx++;
+            updateSliderPosition();
+        } else if (diffX < -40 && currentSlideIdx > 0) {
+            currentSlideIdx--;
+            updateSliderPosition();
+        }
+    }, { passive: true });
+
+    window.openDetailBridge = async (siteId) => {
         const site = sitesCache[siteId];
         if (!site) return;
 
         const lat = site.lat || 37.5666;
         const lng = site.lng || 126.9784;
         const travel = calculateTravelInfo(lat, lng);
-        const thumbUrl = site.img || DEFAULT_THUMB;
 
-        const modalImg = document.getElementById('modal-img');
-        modalImg.src = thumbUrl;
-        
+        let imgList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
+
+        // 갤러리 슬라이드 빌드
+        sliderTrack.innerHTML = '';
+        currentSlideIdx = 0;
+        currentSlideCount = imgList.length;
+
+        imgList.forEach((src, idx) => {
+            const slide = document.createElement('div');
+            slide.className = 'detail-slide';
+            slide.innerHTML = `<img referrerpolicy="no-referrer" src="${escapeHtml(src)}" alt="캠핑장 사진 ${idx+1}" onerror="this.src='${DEFAULT_THUMB}'" />`;
+            sliderTrack.appendChild(slide);
+        });
+
+        updateSliderPosition();
+
         document.getElementById('modal-title').innerHTML = `
             <svg class="icon-svg" style="color:var(--c-camel);" width="16" height="16" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
             <span>${escapeHtml(site.campName)}</span>
@@ -1567,6 +1698,15 @@
         document.getElementById('modal-kakao-btn').href = site.kakaoUrl || `https://map.kakao.com/link/search/${encodeURIComponent(site.campName)}`;
 
         detailModal.style.display = 'flex';
+
+        // 기존 단일 이미지 등록 항목일 경우 백그라운드에서 15장 자동 보충
+        if (!site.images || site.images.length <= 1) {
+            fetchPlaceImages(site.campName, site.address).then(newImgs => {
+                if (newImgs && newImgs.length > 1) {
+                    update(ref(db, `sites/${siteId}`), { images: newImgs });
+                }
+            });
+        }
     };
 
     // 실시간 리스트 렌더링 및 정렬 처리
@@ -1715,9 +1855,18 @@
         if (newImg === null) return;
         const trimmed = newImg.trim();
         if (!trimmed) return;
-        update(ref(db, `sites/${siteId}`), { img: trimmed })
-            .then(() => showToast("사진이 변경되었습니다."))
-            .catch(err => alert("수정 실패: " + err.message));
+        
+        // 기존 갤러리 첫 번째 사진으로도 자동 편입
+        const site = sitesCache[siteId] || {};
+        const oldImages = site.images || [];
+        const updatedImages = [trimmed, ...oldImages.filter(u => u !== trimmed)];
+
+        update(ref(db, `sites/${siteId}`), { 
+            img: trimmed,
+            images: updatedImages
+        })
+        .then(() => showToast("사진이 변경되었습니다."))
+        .catch(err => alert("수정 실패: " + err.message));
     };
 
     window.escapeHtml = function(str) {
