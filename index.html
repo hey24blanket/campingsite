@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>34343444444444444우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -190,7 +190,7 @@
             white-space: nowrap;
         }
 
-        /* 좌측 사이드 패널 (숨김/확장 지원) */
+        /* 좌측 사이드 패널 */
         #sidebar-panel {
             position: absolute;
             top: 50px;
@@ -214,13 +214,11 @@
             width: 820px;
         }
 
-        /* 탭 숨김 상태 */
         #sidebar-panel.hidden-tab {
             transform: translateX(calc(-100% - 30px));
             pointer-events: none;
         }
 
-        /* 탭 숨김 시 띄워주는 플로팅 복원 버튼 */
         #floating-show-btn {
             position: absolute;
             top: 50px;
@@ -411,7 +409,7 @@
             align-content: start;
         }
 
-        /* 슬림 콤팩트 카드 (클릭 가능) */
+        /* 슬림 콤팩트 카드 */
         .camp-card {
             border: 1px solid var(--c-earth);
             background: var(--card-surface);
@@ -1224,69 +1222,103 @@
         return results;
     }
 
-    // 대표성 점수 기반 스마트 이미지 선별
+    // 💡 다중 쿼리 + 통합 후보 30개 + 강력 화장실/음식/시설 영구 감점 점수 선별 알고리즘
     async function fetchPlaceImage(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
             const searchQueries = [
                 `"${placeName}" 캠핑장 전경`,
+                `"${placeName}" 캠핑장 사이트`,
+                `"${placeName}" 캠핑장 야경`,
                 `"${placeName}" 캠핑장`,
-                `${placeName} ${cleanAddr} 캠핑장`,
-                `${placeName} 캠핑장`
+                `${placeName} ${cleanAddr} 캠핑장 전경`,
+                `${placeName} 캠핑`
             ];
 
-            let candidates = [];
+            const candidateMap = new Map();
 
-            for (const query of searchQueries) {
-                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=15&sort=accuracy`;
-                const response = await fetch(imgUrl, {
-                    headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
-                });
+            // 병렬 다중 쿼리 동시 검색 (각 쿼리당 10개씩 수집)
+            const fetchPromises = searchQueries.map(query => {
+                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=10&sort=accuracy`;
+                return fetch(imgUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } })
+                    .then(res => res.ok ? res.json() : { documents: [] })
+                    .then(data => data.documents || [])
+                    .catch(() => []);
+            });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.documents && data.documents.length > 0) {
-                        candidates = data.documents;
-                        break;
-                    }
-                }
-            }
-
-            if (candidates.length === 0) return DEFAULT_THUMB;
-
-            let bestDoc = null;
-            let highestScore = -999;
-
-            candidates.forEach(doc => {
-                let score = 0;
-                const url = (doc.image_url || doc.thumbnail_url || '').toLowerCase();
-                const siteName = (doc.display_sitename || '').toLowerCase();
-                const docUrl = (doc.doc_url || '').toLowerCase();
-                const combined = `${url} ${siteName} ${docUrl}`;
-
-                if (/화장실|샤워실|개수대|toilet|restroom|washroom/.test(combined)) score -= 12;
-                if (/음식|고기|삼겹살|바베큐|bbq|라면|밀키트|메뉴|식당|먹방|안주/.test(combined)) score -= 8;
-                if (/배치도|지도|안내도|map|약도|위치도/.test(combined)) score -= 6;
-                if (/영수증|예약|가격표|요금|내부시설/.test(combined)) score -= 8;
-
-                if (/전경|풍경|야경|뷰|사이트|데크|잔디|캠핑|텐트|오토캠핑/.test(combined)) score += 6;
-                if (combined.includes(placeName.toLowerCase())) score += 3;
-                if (doc.width && doc.height && doc.width > doc.height) score += 2;
-
-                if (score > highestScore) {
-                    highestScore = score;
-                    bestDoc = doc;
+            const results = await Promise.all(fetchPromises);
+            results.flat().forEach(doc => {
+                const key = doc.thumbnail_url || doc.image_url;
+                if (key && !candidateMap.has(key)) {
+                    candidateMap.set(key, doc);
                 }
             });
 
-            if (bestDoc && highestScore > -10) {
-                return bestDoc.thumbnail_url || bestDoc.image_url;
+            const candidates = Array.from(candidateMap.values());
+            if (candidates.length === 0) return DEFAULT_THUMB;
+
+            // 정밀 스코어링
+            function scoreImage(item) {
+                const url = (item.image_url || '').toLowerCase();
+                const thumb = (item.thumbnail_url || '').toLowerCase();
+                const siteName = (item.display_sitename || '').toLowerCase();
+                const docUrl = (item.doc_url || '').toLowerCase();
+                let combined = `${url} ${thumb} ${siteName} ${docUrl}`;
+                try { combined = decodeURIComponent(combined); } catch (e) {}
+
+                let score = 0;
+
+                // 1. 화장실, 샤워실, 세면장, 개수대 등 시설 절대 배제 (-999점)
+                if (/(화장실|샤워실|개수대|세면대|변기|소변기|욕실|toilet|restroom|washroom|bathroom|shower|wash)/i.test(combined)) {
+                    return -999;
+                }
+
+                // 2. 음식/메뉴/영수증/지도/실내방 감점
+                if (/(메뉴|가격표|영수증|예약|식단|요금표|식당|고기|삼겹살|바베큐|bbq|불판|먹방|안주|밀키트|조식|음식|간식|디저트)/i.test(combined)) {
+                    score -= 50;
+                }
+                if (/(지도|배치도|약도|위치도|안내도|map|plane)/i.test(combined)) {
+                    score -= 30;
+                }
+                if (/(방|침대|원룸|객실내부|팬션내부|실내|룸컨디션|거실)/i.test(combined)) {
+                    score -= 25;
+                }
+
+                // 3. 강력 가산점 (전경, 사이트, 텐트, 풍경, 캠핑)
+                if (/(전경|풍경|야경|사이트|데크|잔디|텐트|타프|캠핑|피칭|불멍|숲|마운틴|호수|노을|일몰|석양|view)/i.test(combined)) {
+                    score += 25;
+                }
+                if (combined.includes(placeName.toLowerCase())) {
+                    score += 15;
+                }
+
+                // 4. 가로형 비율 사진 가산점
+                const w = Number(item.width || 0);
+                const h = Number(item.height || 0);
+                if (w > 0 && h > 0) {
+                    const ratio = w / h;
+                    if (ratio >= 1.2 && ratio <= 2.2) score += 10;
+                    else if (ratio < 1.0) score -= 5;
+                }
+
+                return score;
+            }
+
+            const scoredCandidates = candidates.map(doc => ({
+                doc,
+                score: scoreImage(doc)
+            })).sort((a, b) => b.score - a.score);
+
+            // 감점 필터를 통과한 최고점 후보 반환
+            if (scoredCandidates.length > 0 && scoredCandidates[0].score > -100) {
+                const best = scoredCandidates[0].doc;
+                return best.thumbnail_url || best.image_url;
             }
 
             return candidates[0].thumbnail_url || DEFAULT_THUMB;
 
         } catch (err) {
-            console.warn("이미지 로드 예외:", err);
+            console.warn("이미지 선별 예외:", err);
             return DEFAULT_THUMB;
         }
     }
@@ -1386,10 +1418,10 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 핀 추가 및 DB 저장 (풍부한 정규화 메타데이터 포함)
+    // 핀 추가 및 DB 저장 (정밀 선별 대표 사진 적용)
     async function addPlaceToDatabase(name, roadAddr, jibunAddr, phone, category, kakaoUrl, lat, lng) {
         try {
-            showToast(`'${name}' 대표 사진 선별 중...`, 1500);
+            showToast(`'${name}' 대표 전경 사진 선별 중...`, 1500);
             
             const realImg = await fetchPlaceImage(name, roadAddr || jibunAddr);
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
@@ -1506,7 +1538,6 @@
 
                 const position = new naver.maps.LatLng(lat, lng);
                 
-                // 꼬리표가 정확한 좌표를 가리키는 핀 생성
                 const marker = new naver.maps.Marker({
                     position: position,
                     map: map,
