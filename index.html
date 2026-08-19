@@ -197,10 +197,10 @@
             padding: 14px;
             display: flex;
             flex-direction: column;
-            gap: 14px; /* 카드 사이 간격 확보 */
+            gap: 14px;
         }
 
-        /* 캠핑장 카드 스타일 (정보가 잘 보이도록 정비) */
+        /* 캠핑장 카드 스타일 */
         .camp-card {
             border: 1px solid var(--line-color);
             background: #fff;
@@ -311,14 +311,19 @@
         }
 
         .delete-btn {
-            background: none;
-            border: 1px solid var(--line-color);
+            background: #fff;
+            border: 1px solid var(--danger);
             color: var(--danger);
-            padding: 4px 6px;
+            padding: 5px 10px;
             cursor: pointer;
             font-weight: bold;
             font-size: 11px;
             border-radius: 6px;
+            transition: 0.2s;
+        }
+        .delete-btn:hover {
+            background: var(--danger);
+            color: #fff;
         }
 
         /* 지도 위 커스텀 마커 핀 */
@@ -483,12 +488,12 @@
     <!-- 좌측 패널 -->
     <div id="sidebar-panel">
         <div class="sidebar-header">
-            <h3 style="font-size: 0.95em;">캠핑장 정보 가져오기</h3>
+            <h3 style="font-size: 0.95em;">캠핑장 검색 및 핀 추가</h3>
             <div class="search-row">
-                <input type="text" id="camp-search-input" placeholder="네이버 지도 장소 링크 (예: https://naver.me/...)">
-                <button id="add-camp-btn">정보 가져오기</button>
+                <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)">
+                <button id="add-camp-btn">핀 추가</button>
             </div>
-            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬[cite: 1] (네이버 지도 공유 링크를 넣으면 사진·주소가 내 앱 카드에 쏙 들어옵니다)</div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬[cite: 1] (이름을 검색하면 위치와 주소가 정확히 꽂힙니다)</div>
         </div>
         <div class="camp-list-container" id="camp-list"></div>
     </div>
@@ -522,10 +527,6 @@
     let markersMap = {};
 
     const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
-    const MICROLINK_UA = 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)';
-    function buildMicrolinkUrl(targetUrl) {
-        return `https://api.microlink.io?url=${encodeURIComponent(targetUrl)}&headers.user-agent=${encodeURIComponent(MICROLINK_UA)}`;
-    }
 
     const POINT_GWACHEON = { lat: 37.4292, lng: 126.9877, name: '과천' };
     const POINT_MANGWON = { lat: 37.5559, lng: 126.9015, name: '망원' };
@@ -653,94 +654,61 @@
         return results;
     }
 
-    // 네이버 지도 장소 링크로부터 정보(사진, 주소, 이름)를 가져와 내 앱 카드에 완벽히 연동
-    document.getElementById('add-camp-btn').addEventListener('click', async () => {
-        let inputVal = document.getElementById('camp-search-input').value.trim();
-        if (!inputVal) { showToast("네이버 지도 장소 링크를 입력해주세요."); return; }
+    // 네이버 지오코더를 이용해 입력한 캠핑장 이름/주소의 실제 좌표와 도로명 주소를 정밀 획득
+    document.getElementById('add-camp-btn').addEventListener('click', () => {
+        let query = document.getElementById('camp-search-input').value.trim();
+        if (!query) { showToast("캠핑장 이름을 입력해주세요."); return; }
 
-        let targetUrl = inputVal;
-        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-            targetUrl = 'https://map.naver.com/v5/search/' + encodeURIComponent(inputVal);
+        if (typeof naver === 'undefined' || !naver.maps.Service) {
+            showToast("네이버 지오코더 로딩 중입니다.");
+            return;
         }
 
         const addBtn = document.getElementById('add-camp-btn');
-        addBtn.innerText = "정보 가져오는 중...";
+        addBtn.innerText = "위치 찾는 중...";
         addBtn.disabled = true;
 
-        try {
-            let campName = "캠핑장";
-            let fetchedImg = DEFAULT_THUMB;
-            let addressQuery = "";
-
-            const response = await fetch(buildMicrolinkUrl(targetUrl));
-            const result = await response.json();
-            
-            if (result.status === 'success' && result.data) {
-                if (result.data.title) {
-                    campName = result.data.title.replace(/ - 네이버 지도.*$/, '').replace(/\[[^\]]+\]/, '').trim();
-                }
-                if (result.data.image?.url) {
-                    fetchedImg = result.data.image.url;
-                }
-                if (result.data.description) {
-                    const desc = result.data.description;
-                    const match = desc.match(/(?:주소[:\s]*)([^\n]+)/) || desc.match(/([가-힣]+도시|[가-힣]+시|[가-힣]+군)\s+([가-힣]+구|[가-힣]+면|[가-힣]+읍)\s+[^\n]+/);
-                    if (match) {
-                        addressQuery = match[1] ? match[0].trim() : desc;
-                    } else {
-                        addressQuery = desc.slice(0, 50);
-                    }
-                }
+        naver.maps.Service.geocode({ query: query }, async function(status, response) {
+            if (status === naver.maps.Service.Status.ERROR || !response.v2 || response.v2.meta.totalCount === 0) {
+                showToast("검색결과가 없습니다. 정확한 이름을 입력해주세요.");
+                addBtn.innerText = "핀 추가";
+                addBtn.disabled = false;
+                return;
             }
 
-            if (!addressQuery) {
-                addressQuery = campName;
-            }
+            const item = response.v2.addresses[0];
+            const lat = parseFloat(item.y);
+            const lng = parseFloat(item.x);
+            const exactAddress = item.roadAddress || item.jibunAddress || query;
+            const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(query)}`;
 
-            if (typeof naver === 'undefined' || !naver.maps.Service) {
-                throw new Error("네이버 지오코더를 불러오지 못했습니다.");
-            }
-
-            naver.maps.Service.geocode({ query: addressQuery }, async function(status, response) {
-                let lat = 37.5666;
-                let lng = 126.9784;
-                let exactAddress = addressQuery;
-
-                if (status === naver.maps.Service.Status.OK && response.v2 && response.v2.meta.totalCount > 0) {
-                    const item = response.v2.addresses[0];
-                    lat = parseFloat(item.y);
-                    lng = parseFloat(item.x);
-                    exactAddress = item.roadAddress || item.jibunAddress || addressQuery;
-                }
-
+            try {
                 const newSiteRef = push(ref(db, 'sites'));
                 await set(newSiteRef, {
-                    campName: campName,
+                    campName: query,
                     address: exactAddress,
                     lat: lat,
                     lng: lng,
-                    url: targetUrl,
-                    img: fetchedImg,
+                    url: naverSearchUrl,
+                    img: DEFAULT_THUMB,
                     recommender: currentUser,
                     likes: {},
                     comments: {}
                 });
 
                 document.getElementById('camp-search-input').value = '';
-                showToast("캠핑장 정보가 내 앱에 등록되었습니다!");
-                addBtn.innerText = "정보 가져오기";
+                showToast("캠핑장이 추가되었습니다!");
+            } catch (e) {
+                showToast("저장 실패");
+                console.error(e);
+            } finally {
+                addBtn.innerText = "핀 추가";
                 addBtn.disabled = false;
-            });
-
-        } catch (error) {
-            console.error(error);
-            showToast("정보를 불러오지 못했습니다.");
-            addBtn.innerText = "정보 가져오기";
-            addBtn.disabled = false;
-        }
+            }
+        });
     });
 
-    // 추천순 자동 정렬[cite: 1] 및 렌더링
+    // 추천순 자동 정렬[cite: 1] 및 실시간 렌더링
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
             const listContainer = document.getElementById('camp-list');
@@ -796,7 +764,7 @@
                 card.innerHTML = `
                     <div class="camp-card-header">
                         <span>${escapeHtml(site.campName)}</span>
-                        <a href="${escapeHtml(site.url)}" target="_blank" style="color:#FFB7B2; font-size:11px; text-decoration:underline;">원본보기 🔗</a>
+                        <a href="${escapeHtml(site.url)}" target="_blank" style="color:#FFB7B2; font-size:11px; text-decoration:underline;">네이버 지도 🔗</a>
                     </div>
                     <div class="camp-card-body">
                         <div class="thumb-wrap">
@@ -810,7 +778,7 @@
                         </div>
                         <div style="font-size: 0.8em; color: var(--text-sub);">추천인: ${escapeHtml(site.recommender)}</div>
                         <div class="card-actions">
-                            <button class="delete-btn" onclick="deleteCamp('${site.id}')">삭제</button>
+                            <button class="delete-btn" onclick="deleteCamp('${site.id}')">🗑️ 지우기</button>
                             <div style="display:flex; gap:6px;">
                                 <button class="badge-btn" onclick="toggleComments(event, '${site.id}')">💬 ${totalCommentCount}</button>
                                 <button class="badge-btn heart-btn ${liked}" onclick="toggleLike('${site.id}')">♥ ${likeCount}</button>
@@ -831,7 +799,7 @@
     };
 
     window.editCampThumb = (siteId, currentImg) => {
-        const newImg = prompt("새로운 이미지 주소(URL)를 입력하세요:", currentImg !== DEFAULT_THUMB ? currentImg : "");
+        const newImg = prompt("카드로 쓸 사진 이미지 주소(URL)를 입력하세요:\n(네이버 지도 등에서 사진 우클릭 → '이미지 주소 복사')", currentImg !== DEFAULT_THUMB ? currentImg : "");
         if (newImg === null) return;
         const trimmed = newImg.trim();
         if (!trimmed) return;
@@ -855,8 +823,10 @@
     };
 
     window.deleteCamp = (siteId) => {
-        if (confirm("정말 이 캠핑장을 삭제하시겠습니까?")) {
-            remove(ref(db, `sites/${siteId}`)).catch(err => alert("삭제 실패: " + err.message));
+        if (confirm("정말 이 캠핑장을 지우시겠습니까?")) {
+            remove(ref(db, `sites/${siteId}`))
+                .then(() => showToast("캠핑장이 삭제되었습니다."))
+                .catch(err => alert("삭제 실패: " + err.message));
         }
     };
 
