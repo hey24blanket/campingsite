@@ -2,42 +2,56 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>456우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services"></script>
     <style>
         :root {
-            --bg-color: #FDFBF7;
+            /* 지정 팔레트 컬러 */
+            --c-blue: #13619C;      /* 포인트 블루 */
+            --c-camel: #9C7944;     /* 웜 카멜 (강조/좋아요) */
+            --c-earth: #5C503F;     /* 어스 브라운 (보더/보조선) */
+            --c-slate: #374047;     /* 슬레이트 다크 (헤더/핀) */
+            --c-charcoal: #33302C;  /* 딥 차콜 (메인 텍스트/카드 바) */
+
+            --bg-color: #F8F6F0;
             --card-bg: #FFFFFF;
-            --line-color: #555555;
-            --accent: #FFB7B2;
-            --accent-green: #E2F0CB;
-            --danger: #FF6B6B;
-            --text-main: #333333;
-            --text-sub: #666666;
-            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            --danger: #C0392B;
+            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-main); height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--c-charcoal); 
+            font-family: var(--font-main); 
+            height: 100vh; 
+            height: 100dvh;
+            overflow: hidden; 
+            position: relative;
+        }
 
         input, button {
             font-family: var(--font-main);
-            border: 1px solid var(--line-color);
+            border: 1px solid var(--c-earth);
             background: var(--card-bg);
             border-radius: 6px;
-            padding: 8px 10px;
-            font-size: 13px;
+            padding: 6px 8px;
+            font-size: 12px;
             outline: none;
+            touch-action: manipulation;
+            pointer-events: auto !important;
+            -webkit-user-select: text;
+            user-select: text;
         }
 
-        button { cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:active { background: var(--line-color); color: var(--bg-color); }
+        button { cursor: pointer; font-weight: bold; transition: 0.15s; user-select: none; }
+        button:active { background: var(--c-slate); color: #fff; }
 
-        /* 로그인 페이지 */
+        /* 로그인 모달 */
         #login-page {
             position: fixed;
             inset: 0;
@@ -45,35 +59,35 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 3000;
             padding: 20px;
         }
 
         .login-box {
             width: 100%;
-            max-width: 320px;
+            max-width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            border: 1px solid var(--line-color);
-            padding: 24px;
+            gap: 10px;
+            border: 1px solid var(--c-earth);
+            padding: 18px;
             background: var(--card-bg);
             border-radius: 10px;
-            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+            box-shadow: 4px 4px 0 rgba(51, 48, 44, 0.12);
         }
 
         .login-title {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 800;
             text-align: center;
-            margin-bottom: 4px;
+            color: var(--c-charcoal);
         }
 
         .hint {
-            font-size: 12px;
-            color: #666;
+            font-size: 11px;
+            color: var(--c-earth);
             text-align: center;
-            margin-top: -6px;
+            margin-top: -4px;
         }
 
         .input-icon-wrapper {
@@ -83,23 +97,29 @@
 
         .input-icon-wrapper input {
             width: 100%;
-            padding-right: 40px;
+            padding-right: 32px;
         }
 
         #toggle-pw-btn {
             position: absolute;
-            right: 8px;
+            right: 4px;
             top: 50%;
             transform: translateY(-50%);
             background: transparent;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: none;
+        }
+
+        #login-btn {
+            background: var(--c-blue);
+            color: #fff;
+            border: 1px solid var(--c-slate);
+            padding: 8px;
         }
 
         /* 메인 화면 */
@@ -107,7 +127,9 @@
             position: relative;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             display: flex;
+            overflow: hidden;
         }
 
         #map {
@@ -120,75 +142,78 @@
 
         .floating-top {
             position: absolute;
-            top: 16px;
-            left: 20px;
-            right: 20px;
+            top: 10px;
+            left: 12px;
+            right: 12px;
             z-index: 10;
             display: flex;
             justify-content: space-between;
             align-items: center;
             pointer-events: none;
-            gap: 8px;
+            gap: 6px;
         }
 
         .top-brand {
             background: var(--card-bg);
-            border: 1px solid var(--line-color);
-            padding: 10px 16px;
-            border-radius: 10px;
+            border: 1px solid var(--c-earth);
+            color: var(--c-charcoal);
+            padding: 6px 10px;
+            border-radius: 6px;
             font-weight: 800;
-            font-size: 1em;
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            font-size: 0.82em;
+            box-shadow: 2px 2px 0 rgba(51, 48, 44, 0.12);
             pointer-events: auto;
             white-space: nowrap;
         }
 
         .top-user {
             background: var(--card-bg);
-            border: 1px solid var(--line-color);
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 0.85em;
+            border: 1px solid var(--c-earth);
+            color: var(--c-slate);
+            padding: 6px 9px;
+            border-radius: 6px;
+            font-size: 0.76em;
             font-weight: bold;
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            box-shadow: 2px 2px 0 rgba(51, 48, 44, 0.12);
             pointer-events: auto;
             white-space: nowrap;
         }
 
-        /* 좌측 캠핑장 패널 (너비 확장 애니메이션 지원) */
+        /* 좌측 패널 (기본 너비 280px) */
         #sidebar-panel {
             position: absolute;
-            top: 75px;
-            left: 20px;
-            bottom: 20px;
-            width: 370px;
-            max-width: calc(100vw - 40px);
+            top: 50px;
+            left: 12px;
+            bottom: 12px;
+            width: 280px;
+            max-width: calc(100vw - 24px);
             background: var(--card-bg);
-            border: 1px solid var(--line-color);
-            border-radius: 12px;
+            border: 1px solid var(--c-earth);
+            border-radius: 8px;
             z-index: 20;
             display: flex;
             flex-direction: column;
-            box-shadow: 6px 6px 0 rgba(0,0,0,0.15);
+            box-shadow: 3px 3px 0 rgba(51, 48, 44, 0.15);
             overflow: hidden;
             pointer-events: auto;
-            transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* 확장 상태 */
+        /* 확장 시 (PC 화면 그리드) */
         #sidebar-panel.expanded {
-            width: 1080px;
+            width: 820px;
         }
 
         .sidebar-header {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--line-color);
-            background: #faf8f5;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--c-earth);
+            background: #F3EFE6;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 5px;
             flex-shrink: 0;
             position: relative;
+            z-index: 25;
         }
 
         .sidebar-top-row {
@@ -197,164 +222,186 @@
             align-items: center;
         }
 
+        .sidebar-title {
+            font-weight: 800;
+            font-size: 0.78em;
+            color: var(--c-charcoal);
+        }
+
         .expand-toggle-btn {
             background: #fff;
-            border: 1px solid var(--line-color);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 11px;
+            border: 1px solid var(--c-earth);
+            color: var(--c-slate);
+            border-radius: 4px;
+            padding: 2px 5px;
+            font-size: 9.5px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             cursor: pointer;
-        }
-        .expand-toggle-btn:hover {
-            background: #f0f0f0;
         }
 
         .search-row {
             display: flex;
-            gap: 6px;
+            gap: 4px;
+            position: relative;
         }
 
         .search-row input {
             flex: 1;
+            font-size: 11.5px;
+            padding: 5px 7px;
+            border-color: var(--c-earth);
+        }
+
+        #search-btn {
+            background: var(--c-blue);
+            color: #fff;
+            border-color: var(--c-blue);
+            padding: 5px 8px;
+            font-size: 11px;
         }
 
         #search-results-box {
+            position: absolute;
+            top: calc(100% + 3px);
+            left: 8px;
+            right: 8px;
+            background: #FCFAF6;
+            border: 1.5px solid var(--c-camel);
+            border-radius: 6px;
+            padding: 5px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 40;
             display: none;
             flex-direction: column;
-            gap: 6px;
-            background: #fffdf9;
-            border: 1.5px solid var(--accent);
-            border-radius: 8px;
-            padding: 8px;
-            margin-top: 4px;
-            max-height: 240px;
-            overflow-y: auto;
+            gap: 3px;
+            box-shadow: 0 4px 10px rgba(51, 48, 44, 0.18);
         }
 
         .search-box-title {
-            font-size: 11px;
+            font-size: 9.5px;
             font-weight: 800;
-            color: #d9534f;
+            color: var(--c-camel);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #ffe0dd;
-            padding-bottom: 3px;
+            border-bottom: 1px solid #EADBCA;
+            padding-bottom: 2px;
         }
 
         .close-res-btn {
             background: none;
             border: none;
-            font-size: 12px;
+            font-size: 10px;
             cursor: pointer;
             padding: 0;
-            color: #888;
+            color: var(--c-earth);
         }
 
         .search-result-item {
             background: #fff;
-            border: 1px solid #e0deda;
-            border-radius: 6px;
-            padding: 6px 8px;
+            border: 1px solid #E0D9CD;
+            border-radius: 4px;
+            padding: 4px 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .res-info {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1px;
             overflow: hidden;
         }
 
         .res-title {
             font-weight: 800;
-            font-size: 12px;
-            color: #222;
+            font-size: 10.5px;
+            color: var(--c-charcoal);
         }
 
         .res-addr {
-            font-size: 10px;
-            color: #666;
+            font-size: 9px;
+            color: var(--c-earth);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .add-pin-btn {
-            background: var(--accent-green);
-            border: 1px solid var(--line-color);
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-size: 10px;
+            background: var(--c-blue);
+            color: #fff;
+            border: 1px solid var(--c-blue);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 9px;
             font-weight: 800;
             cursor: pointer;
             white-space: nowrap;
         }
 
-        /* 카드 리스트 컨테이너 (확장 시 그리드로 전환) */
+        /* 카드 컨테이너 */
         .camp-list-container {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 6px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
+            -webkit-overflow-scrolling: touch;
         }
 
         #sidebar-panel.expanded .camp-list-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 6px;
             align-content: start;
         }
 
-        /* 슬림 & 컴팩트 캠핑장 카드 */
+        /* 슬림 70% 가로형 콤팩트 카드 */
         .camp-card {
-            border: 1px solid var(--line-color);
+            border: 1px solid var(--c-earth);
             background: #fff;
-            border-radius: 8px;
+            border-radius: 5px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(51, 48, 44, 0.05);
             flex-shrink: 0;
         }
 
         .camp-card-header {
-            background: #111;
+            background: var(--c-charcoal);
             color: #fff;
-            padding: 6px 10px;
+            padding: 3px 6px;
             font-weight: 800;
-            font-size: 0.88em;
+            font-size: 0.72em;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .camp-card-body {
-            padding: 8px 10px;
+            padding: 5px 6px;
             display: flex;
-            flex-direction: column;
             gap: 6px;
-            font-size: 0.82em;
+            align-items: center;
         }
 
         .thumb-wrap {
             position: relative;
-            width: 100%;
-            height: 110px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            width: 58px;
+            height: 58px;
+            min-width: 58px;
+            border: 1px solid #E2DDD3;
+            border-radius: 4px;
             overflow: hidden;
-            background: #111;
+            background: var(--c-slate);
         }
 
         .thumb {
@@ -366,131 +413,144 @@
 
         .thumb-edit-btn {
             position: absolute;
-            right: 4px;
-            bottom: 4px;
-            background: rgba(0,0,0,0.75);
+            right: 2px;
+            bottom: 2px;
+            background: rgba(51, 48, 44, 0.85);
             color: #fff;
-            border: 1px solid #fff;
-            padding: 2px 5px;
-            font-size: 9px;
-            border-radius: 3px;
+            border: 1px solid rgba(255,255,255,0.7);
+            padding: 1px 3px;
+            font-size: 7px;
+            border-radius: 2px;
             cursor: pointer;
             font-weight: bold;
         }
 
+        .card-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
         .address-text {
-            font-size: 0.8em;
-            color: var(--text-main);
+            font-size: 0.71em;
+            color: var(--c-charcoal);
             font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            background: #f7f5f0;
-            padding: 4px 6px;
-            border-radius: 4px;
-            border: 1px solid #e5e2dc;
         }
 
         .travel-info {
-            background: #faf8f5;
-            border: 1px solid #e0def4;
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 0.76em;
-            color: var(--text-sub);
+            font-size: 0.68em;
+            color: var(--c-earth);
             display: flex;
-            flex-direction: column;
-            gap: 1px;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .card-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px dashed #eee;
-            padding-top: 5px;
-            margin-top: 2px;
+            border-top: 1px dashed #EAE5DB;
+            padding-top: 2px;
+            margin-top: 1px;
+        }
+
+        .card-author {
+            font-size: 8px;
+            color: var(--c-earth);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 65px;
         }
 
         .badge-btn {
             background: none;
-            border: 1px solid var(--line-color);
-            padding: 3px 6px;
+            border: 1px solid var(--c-earth);
+            color: var(--c-charcoal);
+            padding: 1px 4px;
             cursor: pointer;
             font-weight: bold;
-            border-radius: 5px;
-            font-size: 10px;
+            border-radius: 3px;
+            font-size: 8px;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 2px;
         }
 
         .heart-btn.active {
-            background: var(--accent);
+            background: var(--c-camel);
+            color: #fff;
+            border-color: var(--c-camel);
         }
 
         .delete-btn {
             background: #fff;
             border: 1px solid var(--danger);
             color: var(--danger);
-            padding: 3px 6px;
+            padding: 1px 3px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 10px;
-            border-radius: 5px;
-        }
-        .delete-btn:hover {
-            background: var(--danger);
-            color: #fff;
+            font-size: 8px;
+            border-radius: 3px;
         }
 
+        /* 핀 */
         .custom-map-pin {
-            background: #000;
+            background: var(--c-slate);
             color: #fff;
-            padding: 3px 7px;
-            border-radius: 6px;
+            padding: 2px 4px;
+            border-radius: 4px;
             font-weight: 800;
-            font-size: 11px;
-            border: 1.5px solid #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-size: 9.5px;
+            border: 1px solid var(--c-camel);
+            box-shadow: 0 1px 3px rgba(51, 48, 44, 0.35);
             white-space: nowrap;
             cursor: pointer;
         }
         .custom-map-pin:hover {
-            background: var(--danger);
+            background: var(--c-blue);
+            border-color: #fff;
         }
 
+        /* 댓글 팝업 */
         .chat-window {
             position: absolute;
             z-index: 3000;
-            border: 1px solid var(--line-color);
-            border-radius: 10px;
+            border: 1px solid var(--c-earth);
+            border-radius: 6px;
             background: #fff;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
-            width: 270px;
-            height: 230px;
+            box-shadow: 3px 3px 0 rgba(51, 48, 44, 0.18);
+            width: 230px;
+            height: 190px;
         }
 
         .chat-list {
             flex: 1;
             overflow-y: auto;
-            padding: 8px;
+            padding: 5px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
             background: var(--bg-color);
         }
 
         .chat-bubble {
             background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 5px 8px;
-            font-size: 11px;
-            color: #333;
+            border: 1px solid #DDD6C7;
+            border-radius: 4px;
+            padding: 3px 5px;
+            font-size: 10px;
+            color: var(--c-charcoal);
             max-width: 85%;
             align-self: flex-start;
             word-break: break-word;
@@ -498,35 +558,36 @@
 
         .chat-empty {
             margin: auto;
-            padding: 10px;
-            color: #888;
-            font-size: 11px;
+            padding: 6px;
+            color: var(--c-earth);
+            font-size: 10px;
             text-align: center;
         }
 
         .chat-input-row {
             display: flex;
-            height: 34px;
-            border-top: 1px solid var(--line-color);
+            height: 28px;
+            border-top: 1px solid var(--c-earth);
             background: #fff;
         }
 
         .chat-input {
             flex: 1;
             border: none;
-            padding: 0 8px;
+            padding: 0 5px;
             outline: none;
-            font-size: 11px;
+            font-size: 10px;
             border-radius: 0;
         }
 
         .chat-send-btn {
-            width: 46px;
+            width: 36px;
             border: none;
-            background: var(--accent-green);
+            background: var(--c-blue);
+            color: #fff;
             font-weight: bold;
-            font-size: 11px;
-            border-left: 1px solid var(--line-color);
+            font-size: 10px;
+            border-left: 1px solid var(--c-earth);
             border-radius: 0;
             cursor: pointer;
         }
@@ -534,58 +595,67 @@
         #toast {
             position: fixed;
             left: 50%;
-            bottom: 25px;
-            transform: translateX(-50%) translateY(10px);
+            bottom: 16px;
+            transform: translateX(-50%) translateY(8px);
             opacity: 0;
             pointer-events: none;
             z-index: 4000;
-            min-width: 160px;
+            min-width: 140px;
             max-width: 85%;
-            padding: 10px 14px;
-            border: 1px solid var(--line-color);
+            padding: 6px 10px;
+            border: 1px solid var(--c-earth);
             background: #fff;
-            border-radius: 8px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+            color: var(--c-charcoal);
+            border-radius: 6px;
+            box-shadow: 2px 2px 0 rgba(51, 48, 44, 0.12);
             text-align: center;
             font-weight: 700;
-            font-size: 12px;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            font-size: 10.5px;
+            transition: opacity 0.25s ease, transform 0.25s ease;
         }
         #toast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
 
+        /* 📱 모바일 완전 반응형 최적화 */
         @media (max-width: 768px) {
             .floating-top {
-                top: 8px;
-                left: 8px;
-                right: 8px;
+                top: 6px;
+                left: 6px;
+                right: 6px;
                 gap: 4px;
             }
             .top-brand {
-                font-size: 0.8em;
-                padding: 6px 10px;
+                font-size: 0.74em;
+                padding: 4px 7px;
             }
             .top-user {
-                font-size: 0.75em;
-                padding: 6px 8px;
+                font-size: 0.7em;
+                padding: 4px 6px;
             }
             #sidebar-panel {
                 top: auto;
-                left: 8px;
-                right: 8px;
-                bottom: 8px;
-                height: 50vh;
+                left: 6px;
+                right: 6px;
+                bottom: 6px;
                 width: auto;
                 max-width: 100vw;
+                height: 40vh;
+                height: 40dvh;
+                border-radius: 8px;
             }
             #sidebar-panel.expanded {
                 width: auto;
-                height: 85vh;
+                height: 72vh;
+                height: 72dvh;
             }
-            .thumb-wrap {
-                height: 95px;
+            #sidebar-panel.expanded .camp-list-container {
+                display: flex;
+                flex-direction: column;
+            }
+            .search-row input {
+                font-size: 14px; /* iOS 자동 줌 방지 */
             }
         }
     </style>
@@ -594,21 +664,21 @@
 
 <div id="login-page">
     <div class="login-box">
-        <img class="hero-image" src="https://raw.githubusercontent.com/hey24blanket/camping-menu/refs/heads/main/hero_00000.png" alt="캠핑 이미지" style="width:100%; height:140px; object-fit:cover; border-radius:6px; border:1px solid var(--line-color); display:block;" />
+        <img class="hero-image" src="https://raw.githubusercontent.com/hey24blanket/camping-menu/refs/heads/main/hero_00000.png" alt="캠핑 이미지" style="width:100%; height:120px; object-fit:cover; border-radius:5px; border:1px solid var(--c-earth); display:block;" />
         <h2 class="login-title">캠핑장 추천 목록</h2>
         
-        <input type="text" id="userid" placeholder="아이디 (띄어쓰기 없는 한글)" />
+        <input type="text" id="userid" placeholder="아이디 (한글)" autocomplete="off" autocorrect="off" />
         <p class="hint">DB 확인 후 없으면 자동 가입됩니다.</p>
         
         <div class="input-icon-wrapper">
             <input type="password" id="userpw" placeholder="비밀번호 (숫자 3자리)" inputmode="numeric" maxlength="3" />
             <button type="button" id="toggle-pw-btn" aria-label="비밀번호 보기">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5C503F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
                 </svg>
             </button>
         </div>
-        <button id="login-btn">들어가기</button>
+        <button type="button" id="login-btn">들어가기</button>
     </div>
 </div>
 
@@ -623,23 +693,23 @@
     <div id="sidebar-panel">
         <div class="sidebar-header">
             <div class="sidebar-top-row">
-                <span style="font-weight: 800; font-size: 0.9em;">캠핑장 검색 및 핀 추가</span>
+                <span class="sidebar-title">캠핑장 검색 및 핀 추가</span>
                 <button type="button" id="toggle-expand-btn" class="expand-toggle-btn">
                     <span id="expand-btn-icon">⤢</span> <span id="expand-btn-text">넓게보기</span>
                 </button>
             </div>
             <div class="search-row">
-                <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)">
+                <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)" autocomplete="off" autocorrect="off" />
                 <button type="button" id="search-btn">검색</button>
             </div>
-            <div style="font-size: 0.72em; color: var(--text-sub);">추천순 자동 정렬 (핀 추가 시 전경 사진이 등록됩니다)</div>
+            <div style="font-size: 0.65em; color: var(--c-earth);">추천순 자동 정렬 (전경 사진 우선 선별)</div>
 
             <div id="search-results-box">
                 <div class="search-box-title">
                     <span>🔍 검색 결과 선택</span>
                     <button type="button" class="close-res-btn" id="close-search-btn">✕ 닫기</button>
                 </div>
-                <div id="search-results-list" style="display:flex; flex-direction:column; gap:4px;"></div>
+                <div id="search-results-list" style="display:flex; flex-direction:column; gap:3px;"></div>
             </div>
         </div>
         <div class="camp-list-container" id="camp-list"></div>
@@ -674,9 +744,8 @@
     let markersMap = {};
 
     const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
-    const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
+    const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80";
 
-    // 별양 및 망원 출발 기준점 설정
     const POINT_BYEOLYANG = { lat: 37.4292, lng: 126.9877, name: '별양' };
     const POINT_MANGWON = { lat: 37.5559, lng: 126.9015, name: '망원' };
 
@@ -688,7 +757,7 @@
     const loginBtn = document.getElementById('login-btn');
     const togglePwBtn = document.getElementById('toggle-pw-btn');
 
-    function showToast(message, duration = 1800) {
+    function showToast(message, duration = 1500) {
         const toast = document.getElementById('toast');
         clearTimeout(toastTimer);
         toast.textContent = message;
@@ -704,7 +773,7 @@
             idInput.value = savedId;
             pwInput.value = savedPw;
         } catch (error) {
-            console.warn('저장된 로그인 정보를 불러오지 못했습니다.', error);
+            console.warn('로그인 정보 복원 실패:', error);
         }
     }
 
@@ -713,14 +782,14 @@
             localStorage.setItem(SAVED_LOGIN_ID_KEY, id);
             localStorage.setItem(SAVED_LOGIN_PW_KEY, password);
         } catch (error) {
-            console.warn('로그인 정보를 저장하지 못했습니다.', error);
+            console.warn('로그인 정보 저장 실패:', error);
         }
     }
 
     pwInput.addEventListener('input', () => pwInput.value = pwInput.value.replace(/\D/g, '').slice(0, 3));
     
-    const eyeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-    const eyeOffSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+    const eyeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5C503F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const eyeOffSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5C503F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
     togglePwBtn.addEventListener('click', () => { 
         pwInput.type = pwInput.type === 'password' ? 'text' : 'password'; 
         togglePwBtn.innerHTML = pwInput.type === 'password' ? eyeSvg : eyeOffSvg; 
@@ -731,7 +800,7 @@
 
     restoreSavedLogin();
 
-    // 탭 확장/축소 토글 버튼 이벤트
+    // 탭 확장/축소
     const sidebarPanel = document.getElementById('sidebar-panel');
     const toggleExpandBtn = document.getElementById('toggle-expand-btn');
     const expandBtnIcon = document.getElementById('expand-btn-icon');
@@ -772,7 +841,7 @@
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('main-page').style.display = 'flex';
             document.getElementById('current-user-display').innerText = `로그인: ${currentUser}님`;
-            showToast(toastMessage, 1800);
+            showToast(toastMessage, 1500);
 
             initNaverMap();
         } catch (e) {
@@ -815,18 +884,21 @@
         return results;
     }
 
-    // 전경 사진 위주 검색
-    async function fetchPlaceImage(placeName) {
+    // 💡 대표성 점수 기반 스마트 이미지 선별 알고리즘 (후보군 15개 중 전경/야경 1위 선별)
+    async function fetchPlaceImage(placeName, placeAddress) {
         try {
+            const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
             const searchQueries = [
-                `${placeName} 캠핑장 야경`,
-                `${placeName} 캠핑장 전경`,
-                `${placeName} 캠핑장 텐트`,
+                `"${placeName}" 캠핑장 전경`,
+                `"${placeName}" 캠핑장`,
+                `${placeName} ${cleanAddr} 캠핑장`,
                 `${placeName} 캠핑장`
             ];
 
+            let candidates = [];
+
             for (const query of searchQueries) {
-                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=10&sort=accuracy`;
+                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=15&sort=accuracy`;
                 const response = await fetch(imgUrl, {
                     headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
                 });
@@ -834,21 +906,53 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.documents && data.documents.length > 0) {
-                        for (const doc of data.documents) {
-                            const docUrl = (doc.image_url || doc.thumbnail_url).toLowerCase();
-                            const docName = (doc.display_sitename || "").toLowerCase();
-                            if (!docUrl.includes('toilet') && !docUrl.includes('restroom') && !docName.includes('화장실')) {
-                                return doc.image_url || doc.thumbnail_url;
-                            }
-                        }
-                        return data.documents[0].image_url || data.documents[0].thumbnail_url;
+                        candidates = data.documents;
+                        break;
                     }
                 }
             }
+
+            if (candidates.length === 0) return DEFAULT_THUMB;
+
+            // 점수표 기반 최적 후보 산출
+            let bestDoc = null;
+            let highestScore = -999;
+
+            candidates.forEach(doc => {
+                let score = 0;
+                const url = (doc.image_url || doc.thumbnail_url || '').toLowerCase();
+                const siteName = (doc.display_sitename || '').toLowerCase();
+                const docUrl = (doc.doc_url || '').toLowerCase();
+                const combined = `${url} ${siteName} ${docUrl}`;
+
+                // 1. 제외 대상 필터링 (화장실, 음식, 지도 등 감점)
+                if (/화장실|샤워실|개수대|toilet|restroom|washroom/.test(combined)) score -= 12;
+                if (/음식|고기|삼겹살|바베큐|bbq|라면|밀키트|메뉴|식당|먹방|안주/.test(combined)) score -= 8;
+                if (/배치도|지도|안내도|map|약도|위치도/.test(combined)) score -= 6;
+                if (/영수증|예약|가격표|요금|내부시설/.test(combined)) score -= 8;
+
+                // 2. 가산점 부여 (전경, 텐트, 뷰, 캠핑장 관련)
+                if (/전경|풍경|야경|뷰|사이트|데크|잔디|캠핑|텐트|오토캠핑/.test(combined)) score += 6;
+                if (combined.includes(placeName.toLowerCase())) score += 3;
+                if (doc.width && doc.height && doc.width > doc.height) score += 2; // 가로형 사진 선호
+
+                if (score > highestScore) {
+                    highestScore = score;
+                    bestDoc = doc;
+                }
+            });
+
+            if (bestDoc && highestScore > -10) {
+                // CDN 차단이 없는 안전한 thumbnail_url 우선 활용
+                return bestDoc.thumbnail_url || bestDoc.image_url;
+            }
+
+            return candidates[0].thumbnail_url || DEFAULT_THUMB;
+
         } catch (err) {
             console.warn("이미지 로드 예외:", err);
+            return DEFAULT_THUMB;
         }
-        return DEFAULT_THUMB;
     }
 
     // 장소 검색
@@ -905,7 +1009,7 @@
             }
         } catch (err) {
             console.error(err);
-            showToast("검색 연결에 실패했습니다.");
+            showToast("검색 연결 실패");
             resultsBox.style.display = 'none';
         } finally {
             searchBtn.innerText = "검색";
@@ -948,9 +1052,9 @@
     // 핀 추가 및 DB 저장
     async function addPlaceToDatabase(name, address, lat, lng) {
         try {
-            showToast(`'${name}' 사진과 정보를 불러오는 중...`, 1600);
+            showToast(`'${name}' 대표 사진 선별 중...`, 1500);
             
-            const realImg = await fetchPlaceImage(name);
+            const realImg = await fetchPlaceImage(name, address);
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
             
             const newSiteRef = push(ref(db, 'sites'));
@@ -980,7 +1084,7 @@
         }
     }
 
-    // 실시간 렌더링
+    // 실시간 렌더링 (슬림 70% 가로형 콤팩트 카드)
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
             const listContainer = document.getElementById('camp-list');
@@ -998,11 +1102,11 @@
             })).sort((a, b) => {
                 const aLikes = Object.keys(a.likes || {}).length;
                 const bLikes = Object.keys(b.likes || {}).length;
-                return bLikes - aLikes;
+                return bLikes - aLikes; // 추천순 자동 정렬
             });
 
             if (sitesArray.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; color:#666; padding:15px; font-size:12px;">등록된 캠핑장이 없습니다.</div>';
+                listContainer.innerHTML = '<div style="text-align:center; color:var(--c-earth); padding:10px; font-size:10.5px;">등록된 캠핑장이 없습니다.</div>';
                 return;
             }
 
@@ -1025,7 +1129,7 @@
                     map: map,
                     icon: {
                         content: `<div class="custom-map-pin" onclick="panToCamp(${lat}, ${lng})">⛺ ${escapeHtml(site.campName)}</div>`,
-                        anchor: new naver.maps.Point(15, 15)
+                        anchor: new naver.maps.Point(10, 10)
                     }
                 });
 
@@ -1036,24 +1140,26 @@
                 card.innerHTML = `
                     <div class="camp-card-header">
                         <span>⛺ ${escapeHtml(site.campName)}</span>
-                        <a href="${escapeHtml(site.url)}" target="_blank" style="color:#FFB7B2; font-size:10px; text-decoration:underline;">네이버 지도 🔗</a>
+                        <a href="${escapeHtml(site.url)}" target="_blank" style="color:var(--c-camel); font-size:8.5px; text-decoration:underline;">네이버 지도 🔗</a>
                     </div>
                     <div class="camp-card-body">
                         <div class="thumb-wrap">
                             <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="캠핑장 사진" onerror="this.src='${DEFAULT_THUMB}'">
                             <button class="thumb-edit-btn" onclick="editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
                         </div>
-                        <div class="address-text" title="${escapeHtml(site.address)}">📍 ${escapeHtml(site.address)}</div>
-                        <div class="travel-info">
-                            <div>🚗 <b>별양출발:</b> 약 ${travel['별양'].time} (${travel['별양'].distance}km)</div>
-                            <div>🚗 <b>망원출발:</b> 약 ${travel['망원'].time} (${travel['망원'].distance}km)</div>
-                        </div>
-                        <div style="font-size: 0.76em; color: var(--text-sub);">추천인: ${escapeHtml(site.recommender)}</div>
-                        <div class="card-actions">
-                            <button class="delete-btn" onclick="deleteCamp('${site.id}')">🗑️ 지우기</button>
-                            <div style="display:flex; gap:4px; align-items:center;">
-                                <button class="badge-btn" onclick="toggleComments(event, '${site.id}')">💬 ${totalCommentCount}</button>
-                                <button class="badge-btn heart-btn ${liked}" onclick="toggleLike('${site.id}')">♥ ${likeCount}</button>
+                        <div class="card-details">
+                            <div class="address-text" title="${escapeHtml(site.address)}">📍 ${escapeHtml(site.address)}</div>
+                            <div class="travel-info">
+                                <span>🚗 별양: ${travel['별양'].time}</span>
+                                <span>🚗 망원: ${travel['망원'].time}</span>
+                            </div>
+                            <div class="card-actions">
+                                <span class="card-author">by ${escapeHtml(site.recommender)}</span>
+                                <div style="display:flex; gap:3px; align-items:center;">
+                                    <button class="badge-btn" onclick="toggleComments(event, '${site.id}')">💬 ${totalCommentCount}</button>
+                                    <button class="badge-btn heart-btn ${liked}" onclick="toggleLike('${site.id}')">♥ ${likeCount}</button>
+                                    <button class="delete-btn" onclick="deleteCamp('${site.id}')">🗑️</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1130,8 +1236,8 @@
         activeChatWindow = chatWin;
 
         const rect = targetBtn.getBoundingClientRect();
-        chatWin.style.left = Math.min(window.innerWidth - 280, Math.max(10, rect.left)) + 'px';
-        chatWin.style.top = (rect.bottom + 6 + window.scrollY > window.innerHeight ? rect.top - 238 + window.scrollY : rect.bottom + 6 + window.scrollY) + 'px';
+        chatWin.style.left = Math.min(window.innerWidth - 240, Math.max(10, rect.left)) + 'px';
+        chatWin.style.top = (rect.bottom + 4 + window.scrollY > window.innerHeight ? rect.top - 198 + window.scrollY : rect.bottom + 4 + window.scrollY) + 'px';
 
         const listEl = chatWin.querySelector('.chat-list');
         const inputEl = chatWin.querySelector('.chat-input');
