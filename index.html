@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>ㄷㄷ9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
+    
+    <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="9/11 2박">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/hey24blanket/camping-menu/refs/heads/main/hero_00000.png">
+
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -225,7 +232,7 @@
             width: 840px;
         }
 
-        #sidebar-panel.expanded .camp-list-container {
+        #sidebar-panel.expanded .camp-list-container:not(.compact-mode) {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 6px;
@@ -286,9 +293,6 @@
             gap: 3px;
             cursor: pointer;
         }
-        .desktop-expand-btn:hover {
-            border-color: var(--c-camel);
-        }
 
         .search-row {
             display: flex;
@@ -314,10 +318,18 @@
             white-space: nowrap;
         }
 
-        .sort-filter-bar {
+        /* 🎛️ 정렬 필터 + 리스트/카드 모드 바 */
+        .filter-controls-row {
             display: flex;
             gap: 4px;
             align-items: center;
+            justify-content: space-between;
+        }
+
+        .sort-filter-bar {
+            display: flex;
+            gap: 3px;
+            flex: 1;
         }
 
         .sort-btn {
@@ -332,6 +344,7 @@
             cursor: pointer;
             text-align: center;
             transition: 0.15s;
+            white-space: nowrap;
         }
 
         .sort-btn.active {
@@ -339,6 +352,22 @@
             border-color: var(--c-camel);
             color: var(--text-main);
             font-weight: 800;
+        }
+
+        /* 📋 리스트/카드 뷰 모드 토글 버튼 */
+        .view-mode-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            background: var(--c-blue);
+            color: #ffffff;
+            border: 1px solid var(--c-blue);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
         }
 
         #search-results-box {
@@ -437,7 +466,7 @@
             background: var(--c-charcoal);
         }
 
-        /* 카드 스타일 */
+        /* 1) 표준 카드 뷰 스타일 */
         .camp-card {
             border: 1px solid var(--c-earth);
             background: var(--card-surface);
@@ -621,6 +650,80 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.15); }
             100% { transform: scale(1); }
+        }
+
+        /* 2) 📋 [초밀도 리스트 뷰] 스타일 (폰에서 한 화면 8개 이상 동시 표시) */
+        .camp-list-container.compact-mode {
+            gap: 3px;
+            padding: 4px;
+        }
+
+        .camp-list-container.compact-mode .camp-card {
+            border-radius: 4px;
+            box-shadow: none;
+        }
+
+        .camp-list-container.compact-mode .camp-card-header {
+            display: none; /* 헤더 숨김 */
+        }
+
+        .camp-list-container.compact-mode .camp-card-body {
+            padding: 4px 6px;
+            gap: 6px;
+            height: 38px;
+        }
+
+        .camp-list-container.compact-mode .thumb-wrap {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 3px;
+        }
+
+        .camp-list-container.compact-mode .thumb-edit-btn {
+            display: none;
+        }
+
+        .camp-list-container.compact-mode .card-center {
+            gap: 1px;
+            justify-content: center;
+        }
+
+        .camp-list-container.compact-mode .address-text {
+            font-size: 0.76em;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .camp-list-container.compact-mode .travel-info {
+            flex-direction: row;
+            gap: 6px;
+            font-size: 0.64em;
+        }
+
+        .camp-list-container.compact-mode .card-author {
+            display: none;
+        }
+
+        .camp-list-container.compact-mode .card-right-actions {
+            flex-direction: row;
+            border-left: none;
+            padding-left: 2px;
+            gap: 3px;
+            min-width: auto;
+        }
+
+        .camp-list-container.compact-mode .side-action-btn {
+            flex-direction: row;
+            padding: 3px 5px;
+            font-size: 8.5px;
+            gap: 2px;
+            height: 24px;
+            width: auto;
+        }
+
+        .camp-list-container.compact-mode .side-action-btn.delete-btn {
+            display: none; /* 리스트 모드에선 지우기 생략하여 가로 폭 확보 */
         }
 
         /* 📍 끝이 뾰족한 맞춤형 지도 마커 핀 */
@@ -1101,11 +1204,16 @@
                 <button type="button" id="search-btn">검색</button>
             </div>
 
-            <!-- 정렬 필터 바 -->
-            <div class="sort-filter-bar">
-                <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
-                <button type="button" class="sort-btn" data-sort="byeolyang">별양거리순</button>
-                <button type="button" class="sort-btn" data-sort="mangwon">망원거리순</button>
+            <!-- 🎛️ 필터 + 리스트/카드 모드 바 -->
+            <div class="filter-controls-row">
+                <div class="sort-filter-bar">
+                    <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
+                    <button type="button" class="sort-btn" data-sort="byeolyang">별양</button>
+                    <button type="button" class="sort-btn" data-sort="mangwon">망원</button>
+                </div>
+                <button type="button" id="view-mode-btn" class="view-mode-btn" title="리스트/카드 뷰 전환">
+                    <span id="view-mode-icon">☰</span> <span id="view-mode-text">리스트</span>
+                </button>
             </div>
 
             <div id="search-results-box">
@@ -1200,6 +1308,7 @@
     let markersMap = {};
     let sitesCache = {};
     let currentSortMode = 'likes';
+    let isCompactList = false; // 리스트/카드 모드 상태
 
     const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
     const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
@@ -1305,7 +1414,6 @@
         const currentH = sidebarPanel.getBoundingClientRect().height;
         const vh = window.innerHeight;
 
-        // 드래그 제스처 스냅 (최소화 / 절반 / 전체)
         if (isTouchMoved) {
             if (currentH < vh * 0.28) {
                 sidebarPanel.style.height = '105px';
@@ -1317,7 +1425,6 @@
         }
     });
 
-    // 단순 탭(클릭) 시 순환 토글
     sheetHandle.addEventListener('click', () => {
         if (window.innerWidth > 768 || isTouchMoved) return;
         const currentH = sidebarPanel.getBoundingClientRect().height;
@@ -1341,6 +1448,26 @@
             currentSortMode = btn.dataset.sort;
             renderSitesList();
         });
+    });
+
+    // 📋 [리스트 / 카드] 뷰 모드 토글 이벤트
+    const viewModeBtn = document.getElementById('view-mode-btn');
+    const viewModeIcon = document.getElementById('view-mode-icon');
+    const viewModeText = document.getElementById('view-mode-text');
+    const campListContainer = document.getElementById('camp-list');
+
+    viewModeBtn.addEventListener('click', () => {
+        isCompactList = !isCompactList;
+        if (isCompactList) {
+            campListContainer.classList.add('compact-mode');
+            viewModeIcon.textContent = '⊞';
+            viewModeText.textContent = '카드뷰';
+        } else {
+            campListContainer.classList.remove('compact-mode');
+            viewModeIcon.textContent = '☰';
+            viewModeText.textContent = '리스트';
+        }
+        renderSitesList();
     });
 
     async function handleLogin() {
@@ -1586,7 +1713,7 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 핀 추가 및 DB 저장
+    // 핀 추가 및 DB 저장 (15장 갤러리 이미지 동시 저장)
     async function addPlaceToDatabase(name, roadAddr, jibunAddr, phone, category, kakaoUrl, lat, lng) {
         try {
             showToast(`'${name}' 갤러리 사진들을 수집 중...`, 1800);
@@ -1754,7 +1881,7 @@
         return unread;
     }
 
-    // 실시간 리스트 렌더링 및 정렬 처리
+    // 실시간 리스트 렌더링 (카드 모드 & 리스트 모드 100% 대응)
     function renderSitesList() {
         const listContainer = document.getElementById('camp-list');
         listContainer.innerHTML = '';
@@ -1831,54 +1958,86 @@
                 panToCamp(lat, lng);
                 openDetailBridge(site.id); 
             };
-            card.innerHTML = `
-                <div class="camp-card-header">
-                    <span style="display:flex; align-items:center; gap:4px;">
-                        <svg class="icon-svg" style="color:var(--c-camel);" width="12" height="12" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
-                        <span>${escapeHtml(site.campName)}</span>
-                    </span>
-                    <span style="color:var(--c-camel); font-size:8px;">상세보기 ↗</span>
-                </div>
-                <div class="camp-card-body">
-                    <div class="thumb-wrap">
-                        <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="캠핑장 사진" onerror="this.src='${DEFAULT_THUMB}'">
-                        <button class="thumb-edit-btn" onclick="event.stopPropagation(); editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
-                    </div>
-                    
-                    <div class="card-center">
-                        <div class="address-text" title="${escapeHtml(site.address)}">
-                            <svg class="icon-svg" style="color:var(--c-camel);" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                            <span>${escapeHtml(site.address)}</span>
-                        </div>
-                        <div class="travel-info">
-                            <div class="travel-item">
-                                <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                <span>별양 ${travel['별양'].time} (${travel['별양'].distance}km)</span>
-                            </div>
-                            <div class="travel-item">
-                                <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                <span>망원 ${travel['망원'].time} (${travel['망원'].distance}km)</span>
-                            </div>
-                        </div>
-                        <div class="card-author">by ${escapeHtml(site.recommender)}</div>
-                    </div>
 
-                    <div class="card-right-actions">
-                        <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
-                            <svg class="icon-svg" width="11" height="11" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                            <span>${likeCount}</span>
-                        </button>
-                        <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
-                            ${unreadCount > 0 ? `<div class="unread-comment-badge">${unreadCount}</div>` : ''}
-                            <svg class="icon-svg" style="color:var(--text-sub);" width="11" height="11" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-                            <span>${totalCommentCount}</span>
-                        </button>
-                        <button class="side-action-btn delete-btn" onclick="event.stopPropagation(); deleteCamp('${site.id}')" title="삭제">
-                            <span>삭제</span>
-                        </button>
+            // 1) 리스트 모드 렌더링
+            if (isCompactList) {
+                card.innerHTML = `
+                    <div class="camp-card-body">
+                        <div class="thumb-wrap">
+                            <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="사진" onerror="this.src='${DEFAULT_THUMB}'">
+                        </div>
+                        <div class="card-center">
+                            <div class="address-text">
+                                <span style="font-weight:800; color:var(--text-main);">${escapeHtml(site.campName)}</span>
+                            </div>
+                            <div class="travel-info">
+                                <span>📍 ${(site.address || '').split(' ').slice(0, 2).join(' ')}</span>
+                                <span>🚗 별양 ${travel['별양'].time}</span>
+                                <span>🚗 망원 ${travel['망원'].time}</span>
+                            </div>
+                        </div>
+                        <div class="card-right-actions">
+                            <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
+                                <span>♥</span> <span>${likeCount}</span>
+                            </button>
+                            <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
+                                ${unreadCount > 0 ? `<div class="unread-comment-badge">${unreadCount}</div>` : ''}
+                                <span>💬</span> <span>${totalCommentCount}</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                // 2) 일반 카드 뷰 렌더링
+                card.innerHTML = `
+                    <div class="camp-card-header">
+                        <span style="display:flex; align-items:center; gap:4px;">
+                            <svg class="icon-svg" style="color:var(--c-camel);" width="12" height="12" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
+                            <span>${escapeHtml(site.campName)}</span>
+                        </span>
+                        <span style="color:var(--c-camel); font-size:8px;">상세보기 ↗</span>
+                    </div>
+                    <div class="camp-card-body">
+                        <div class="thumb-wrap">
+                            <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="캠핑장 사진" onerror="this.src='${DEFAULT_THUMB}'">
+                            <button class="thumb-edit-btn" onclick="event.stopPropagation(); editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
+                        </div>
+                        
+                        <div class="card-center">
+                            <div class="address-text" title="${escapeHtml(site.address)}">
+                                <svg class="icon-svg" style="color:var(--c-camel);" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                <span>${escapeHtml(site.address)}</span>
+                            </div>
+                            <div class="travel-info">
+                                <div class="travel-item">
+                                    <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                                    <span>별양 ${travel['별양'].time}</span>
+                                </div>
+                                <div class="travel-item">
+                                    <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                                    <span>망원 ${travel['망원'].time}</span>
+                                </div>
+                            </div>
+                            <div class="card-author">by ${escapeHtml(site.recommender)}</div>
+                        </div>
+
+                        <div class="card-right-actions">
+                            <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
+                                <svg class="icon-svg" width="11" height="11" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                <span>${likeCount}</span>
+                            </button>
+                            <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
+                                ${unreadCount > 0 ? `<div class="unread-comment-badge">${unreadCount}</div>` : ''}
+                                <svg class="icon-svg" style="color:var(--text-sub);" width="11" height="11" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                                <span>${totalCommentCount}</span>
+                            </button>
+                            <button class="side-action-btn delete-btn" onclick="event.stopPropagation(); deleteCamp('${site.id}')" title="삭제">
+                                <span>삭제</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
             listContainer.appendChild(card);
         });
     }
