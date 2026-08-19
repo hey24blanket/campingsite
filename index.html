@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
-    <!-- 네이버 지도 API 최신 공식 스펙 적용 (ncpKeyId 및 geocoder 서브모듈) -->
-    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn&submodules=geocoder"></script>
+    <title>34우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <!-- 네이버 지도 API (지도 렌더링용) -->
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
+    <!-- 카카오 장소 검색 API (0.1초 초고속 키워드 검색기) -->
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services"></script>
     <style>
         :root {
             --bg-color: #FDFBF7;
@@ -178,8 +180,9 @@
             background: #faf8f5;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             flex-shrink: 0;
+            position: relative;
         }
 
         .search-row {
@@ -189,6 +192,72 @@
 
         .search-row input {
             flex: 1;
+        }
+
+        /* 실시간 검색 결과 드롭다운 창 */
+        #search-results-box {
+            position: absolute;
+            top: calc(100% + 2px);
+            left: 12px;
+            right: 12px;
+            background: #fff;
+            border: 1px solid var(--line-color);
+            border-radius: 8px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            max-height: 320px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+        }
+
+        .search-result-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .search-result-item:hover {
+            background: #fdfaf3;
+        }
+
+        .res-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .res-title {
+            font-weight: 800;
+            font-size: 13px;
+            color: #222;
+        }
+
+        .res-addr {
+            font-size: 11px;
+            color: #666;
+            word-break: keep-all;
+        }
+
+        .add-pin-btn {
+            background: var(--accent-green);
+            border: 1px solid var(--line-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .add-pin-btn:hover {
+            background: #c8e6a0;
         }
 
         .camp-list-container {
@@ -491,9 +560,12 @@
             <h3 style="font-size: 0.95em;">캠핑장 검색 및 핀 추가</h3>
             <div class="search-row">
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)">
-                <button id="add-camp-btn">핀 추가</button>
+                <button type="button" id="search-btn">검색</button>
             </div>
-            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬[cite: 1] (이름을 검색하면 위치와 주소가 정확히 꽂힙니다)</div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (이름만 검색하면 후보 목록이 즉시 뜹니다)</div>
+
+            <!-- 실시간 검색 결과 목록 팝업 -->
+            <div id="search-results-box"></div>
         </div>
         <div class="camp-list-container" id="camp-list"></div>
     </div>
@@ -525,6 +597,7 @@
 
     let map = null;
     let markersMap = {};
+    let kakaoPlaces = null;
 
     const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
 
@@ -614,6 +687,7 @@
             showToast(toastMessage, 1800);
 
             initNaverMap();
+            initKakaoPlaces();
         } catch (e) {
             showToast("로그인 오류 발생");
             console.error(e);
@@ -628,6 +702,12 @@
         };
         map = new naver.maps.Map('map', mapOptions);
         setupFirebaseListener();
+    }
+
+    function initKakaoPlaces() {
+        if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
+            kakaoPlaces = new kakao.maps.services.Places();
+        }
     }
 
     function calculateTravelInfo(lat, lng) {
@@ -654,58 +734,92 @@
         return results;
     }
 
-    // 네이버 지오코더를 이용해 입력한 캠핑장 이름/주소의 실제 좌표와 도로명 주소를 정밀 획득
-    document.getElementById('add-camp-btn').addEventListener('click', () => {
-        let query = document.getElementById('camp-search-input').value.trim();
+    // 초고속 카카오 장소 검색 및 후보 리스트 렌더링
+    const searchInput = document.getElementById('camp-search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const resultsBox = document.getElementById('search-results-box');
+
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
+
+    function performSearch() {
+        const query = searchInput.value.trim();
         if (!query) { showToast("캠핑장 이름을 입력해주세요."); return; }
 
-        if (typeof naver === 'undefined' || !naver.maps.Service) {
-            showToast("네이버 지오코더 로딩 중입니다.");
-            return;
-        }
-
-        const addBtn = document.getElementById('add-camp-btn');
-        addBtn.innerText = "위치 찾는 중...";
-        addBtn.disabled = true;
-
-        naver.maps.Service.geocode({ query: query }, async function(status, response) {
-            if (status === naver.maps.Service.Status.ERROR || !response.v2 || response.v2.meta.totalCount === 0) {
-                showToast("검색결과가 없습니다. 정확한 이름을 입력해주세요.");
-                addBtn.innerText = "핀 추가";
-                addBtn.disabled = false;
+        if (!kakaoPlaces) {
+            initKakaoPlaces();
+            if (!kakaoPlaces) {
+                showToast("검색 서비스를 초기화 중입니다.");
                 return;
             }
+        }
 
-            const item = response.v2.addresses[0];
-            const lat = parseFloat(item.y);
-            const lng = parseFloat(item.x);
-            const exactAddress = item.roadAddress || item.jibunAddress || query;
-            const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(query)}`;
-
-            try {
-                const newSiteRef = push(ref(db, 'sites'));
-                await set(newSiteRef, {
-                    campName: query,
-                    address: exactAddress,
-                    lat: lat,
-                    lng: lng,
-                    url: naverSearchUrl,
-                    img: DEFAULT_THUMB,
-                    recommender: currentUser,
-                    likes: {},
-                    comments: {}
+        kakaoPlaces.keywordSearch(query, (data, status) => {
+            resultsBox.innerHTML = '';
+            if (status === kakao.maps.services.Status.OK) {
+                data.slice(0, 6).forEach(item => {
+                    const addr = item.road_address_name || item.address_name || '';
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.innerHTML = `
+                        <div class="res-info">
+                            <div class="res-title">${escapeHtml(item.place_name)}</div>
+                            <div class="res-addr">📍 ${escapeHtml(addr)}</div>
+                        </div>
+                        <button type="button" class="add-pin-btn">📍 핀 추가</button>
+                    `;
+                    div.querySelector('.add-pin-btn').addEventListener('click', () => {
+                        addPlaceToDatabase(item.place_name, addr, parseFloat(item.y), parseFloat(item.x));
+                    });
+                    resultsBox.appendChild(div);
                 });
-
-                document.getElementById('camp-search-input').value = '';
-                showToast("캠핑장이 추가되었습니다!");
-            } catch (e) {
-                showToast("저장 실패");
-                console.error(e);
-            } finally {
-                addBtn.innerText = "핀 추가";
-                addBtn.disabled = false;
+                resultsBox.style.display = 'flex';
+            } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+                showToast("검색 결과가 없습니다.");
+                resultsBox.style.display = 'none';
+            } else {
+                showToast("검색 중 오류 (카카오 Web 도메인 등록 확인)");
+                resultsBox.style.display = 'none';
             }
         });
+    }
+
+    // 선택한 장소를 Firebase에 저장 및 네이버 지도 이동
+    async function addPlaceToDatabase(name, address, lat, lng) {
+        try {
+            const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
+            const newSiteRef = push(ref(db, 'sites'));
+            await set(newSiteRef, {
+                campName: name,
+                address: address,
+                lat: lat,
+                lng: lng,
+                url: naverSearchUrl,
+                img: DEFAULT_THUMB,
+                recommender: currentUser,
+                likes: {},
+                comments: {}
+            });
+
+            searchInput.value = '';
+            resultsBox.style.display = 'none';
+            showToast(`'${name}' 핀이 추가되었습니다!`);
+
+            if (map) {
+                map.setCenter(new naver.maps.LatLng(lat, lng));
+                map.setZoom(12);
+            }
+        } catch (e) {
+            showToast("저장 실패");
+            console.error(e);
+        }
+    }
+
+    // 외부 클릭 시 검색 결과 닫기
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#sidebar-panel')) {
+            resultsBox.style.display = 'none';
+        }
     });
 
     // 추천순 자동 정렬 및 실시간 렌더링
