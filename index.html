@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
-    <!-- 네이버 지도 API (클라이언트 ID 적용 완료) -->
-    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=qzaz64ickn&submodules=geocode"></script>
+    <!-- 네이버 지도 API 최신 공식 스펙 적용 (ncpKeyId 및 geocoder 서브모듈) -->
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn&submodules=geocoder"></script>
     <style>
         :root {
             --bg-color: #FDFBF7;
@@ -477,10 +477,10 @@
         <div class="sidebar-header">
             <h3 style="font-size: 0.95em;">캠핑장 검색 및 핀 추가</h3>
             <div class="search-row">
-                <input type="text" id="camp-search-input" placeholder="정확한 캠핑장 이름 또는 주소 입력">
+                <input type="text" id="camp-search-input" placeholder="주소 또는 네이버지도 링크 입력">
                 <button id="add-camp-btn">핀 추가</button>
             </div>
-            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬[cite: 1]</div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬[cite: 1] (팁: 정확한 주소 또는 네이버 지도 링크 입력)</div>
         </div>
         <div class="camp-list-container" id="camp-list"></div>
     </div>
@@ -531,7 +531,7 @@
     const loginBtn = document.getElementById('login-btn');
     const togglePwBtn = document.getElementById('toggle-pw-btn');
 
-    function showToast(message, duration = 1600) {
+    function showToast(message, duration = 1800) {
         const toast = document.getElementById('toast');
         clearTimeout(toastTimer);
         toast.textContent = message;
@@ -645,92 +645,83 @@
         return results;
     }
 
-    // 정확한 위치 지오코딩 및 동일 이름 다중 결과 처리 기능
-    document.getElementById('add-camp-btn').addEventListener('click', () => {
-        const query = document.getElementById('camp-search-input').value.trim();
-        if (!query) { showToast("캠핑장 이름이나 주소를 입력해주세요."); return; }
+    document.getElementById('add-camp-btn').addEventListener('click', async () => {
+        let inputVal = document.getElementById('camp-search-input').value.trim();
+        if (!inputVal) { showToast("캠핑장 주소 또는 네이버 지도 링크를 입력해주세요."); return; }
 
-        if (typeof naver === 'undefined' || !naver.maps.Service) {
-            showToast("네이버 지오코더 로딩 중입니다.");
-            return;
-        }
-
-        naver.maps.Service.geocode({ query: query }, function(status, response) {
-            if (status === naver.maps.Service.Status.ERROR || !response.v2 || response.v2.meta.totalCount === 0) {
-                showToast("검색 결과가 없습니다. 정확한 이름을 입력해주세요.");
-                return;
-            }
-
-            const addresses = response.v2.addresses;
-            let selectedItem = addresses[0];
-
-            // 동일한 이름/키워드가 여러 지역에 존재할 경우 선택 창 띄우기
-            if (addresses.length > 1) {
-                let msg = `"${query}" 검색 결과가 ${addresses.length개}개 있습니다. 원하는 지역의 번호를 선택하세요:\n\n`;
-                addresses.forEach((addr, idx) => {
-                    msg += `[${idx + 1}] ${addr.roadAddress || addr.jibunAddress}\n`;
-                });
-                let choice = prompt(msg, "1");
-                if (choice === null) return;
-                let idx = parseInt(choice) - 1;
-                if (!isNaN(idx) && idx >= 0 && idx < addresses.length) {
-                    selectedItem = addresses[idx];
-                }
-            }
-
-            const lat = parseFloat(selectedItem.y);
-            const lng = parseFloat(selectedItem.x);
-            const exactAddress = selectedItem.roadAddress || selectedItem.jibunAddress || query;
-
-            addCampToDatabase(query, exactAddress, lat, lng);
-        });
-    });
-
-    async function addCampToDatabase(campName, address, lat, lng) {
         const addBtn = document.getElementById('add-camp-btn');
-        addBtn.innerText = "추가 중...";
+        addBtn.innerText = "정보 가져오는 중...";
         addBtn.disabled = true;
 
         try {
-            const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(campName)}`;
-            
-            // 네이버 지도 및 관련 웹페이지에서 사진(썸네일) 자동 가져오기 시도
-            let fetchedImg = DEFAULT_THUMB;
-            try {
-                const response = await fetch(buildMicrolinkUrl(naverSearchUrl));
-                const result = await response.json();
-                if (result.status === 'success' && result.data && result.data.image?.url) {
-                    fetchedImg = result.data.image.url;
-                }
-            } catch (e) {
-                console.warn("이미지 자동 로드 실패, 기본 이미지 사용");
+            let targetUrl = inputVal;
+            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                targetUrl = 'https://map.naver.com/v5/search/' + encodeURIComponent(inputVal);
             }
 
-            const newSiteRef = push(ref(db, 'sites'));
-            await set(newSiteRef, {
-                campName: campName,
-                address: address,
-                lat: lat,
-                lng: lng,
-                url: naverSearchUrl,
-                img: fetchedImg,
-                recommender: currentUser,
-                likes: {},
-                comments: {}
+            let campName = inputVal;
+            let fetchedImg = DEFAULT_THUMB;
+            let addressQuery = inputVal;
+
+            try {
+                const response = await fetch(buildMicrolinkUrl(targetUrl));
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    if (result.data.title) campName = result.data.title.replace(/ - 네이버 지도.*$/, '').trim();
+                    if (result.data.image?.url) fetchedImg = result.data.image.url;
+                    if (result.data.description) {
+                        const match = result.data.description.match(/(?:주소[:\s]*)([^\n]+)/);
+                        if (match) addressQuery = match[1].trim();
+                    }
+                }
+            } catch (e) {
+                console.warn("링크 정보 로드 실패, 기본값 사용");
+            }
+
+            if (typeof naver === 'undefined' || !naver.maps.Service) {
+                throw new Error("네이버 지오코더를 불러오지 못했습니다.");
+            }
+
+            naver.maps.Service.geocode({ query: addressQuery }, async function(status, response) {
+                if (status === naver.maps.Service.Status.ERROR || !response.v2 || response.v2.meta.totalCount === 0) {
+                    showToast("정확한 주소를 찾지 못했습니다. 올바른 주소를 입력해주세요.");
+                    addBtn.innerText = "핀 추가";
+                    addBtn.disabled = false;
+                    return;
+                }
+
+                const item = response.v2.addresses[0];
+                const lat = parseFloat(item.y);
+                const lng = parseFloat(item.x);
+                const exactAddress = item.roadAddress || item.jibunAddress || addressQuery;
+
+                const newSiteRef = push(ref(db, 'sites'));
+                await set(newSiteRef, {
+                    campName: campName,
+                    address: exactAddress,
+                    lat: lat,
+                    lng: lng,
+                    url: targetUrl,
+                    img: fetchedImg,
+                    recommender: currentUser,
+                    likes: {},
+                    comments: {}
+                });
+
+                document.getElementById('camp-search-input').value = '';
+                showToast("캠핑장 핀과 사진이 추가되었습니다!");
+                addBtn.innerText = "핀 추가";
+                addBtn.disabled = false;
             });
 
-            document.getElementById('camp-search-input').value = '';
-            showToast("캠핑장 핀과 사진이 추가되었습니다.");
-        } catch (e) {
-            showToast("추가 실패");
-            console.error(e);
-        } finally {
+        } catch (error) {
+            console.error(error);
+            showToast("정보를 불러오지 못했습니다.");
             addBtn.innerText = "핀 추가";
             addBtn.disabled = false;
         }
-    }
+    });
 
-    // 추천순 자동 정렬[cite: 1] 및 렌더링
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
             const listContainer = document.getElementById('camp-list');
@@ -769,7 +760,6 @@
                 const travel = calculateTravelInfo(lat, lng);
                 const thumbUrl = (site.img && !site.img.includes('favicon')) ? site.img : DEFAULT_THUMB;
 
-                // 지도 마커 생성 (줌인/아웃 시 이름이 잘 보이는 마커)
                 const position = new naver.maps.LatLng(lat, lng);
                 const marker = new naver.maps.Marker({
                     position: position,
@@ -782,7 +772,6 @@
 
                 markersMap[site.id] = { marker };
 
-                // 카드 렌더링
                 const card = document.createElement('div');
                 card.className = 'camp-card';
                 card.innerHTML = `
