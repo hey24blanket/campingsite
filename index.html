@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>ㅂㅂ 9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,6 +33,8 @@
             --text-main: #EDE6D9;    /* 메인 텍스트 */
             --text-sub: #BAAF9F;     /* 보조 텍스트 */
             --danger: #B5534A;       /* 삭제/경고/알림 빨간색 */
+            --youtube: #FF0000;      /* 유튜브 레드 */
+            --blog: #03C75A;         /* 블로그 그린 */
 
             --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -49,7 +51,7 @@
             font-family: var(--font-main);
         }
 
-        input, button {
+        input, button, select, textarea {
             font-family: var(--font-main);
             border: 1px solid var(--c-earth);
             background: var(--input-bg);
@@ -64,7 +66,7 @@
             user-select: text;
         }
 
-        input::placeholder {
+        input::placeholder, textarea::placeholder {
             color: var(--text-sub);
             opacity: 0.6;
         }
@@ -614,7 +616,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 3px;
             padding-left: 6px;
             border-left: 1px dashed var(--c-earth);
             min-width: 44px;
@@ -626,9 +628,9 @@
             border: 1px solid var(--c-earth);
             color: var(--text-main);
             width: 100%;
-            padding: 3px 0;
+            padding: 2px 0;
             border-radius: 4px;
-            font-size: 9.5px;
+            font-size: 9px;
             font-weight: 800;
             display: flex;
             flex-direction: column;
@@ -648,8 +650,8 @@
         .side-action-btn.delete-btn {
             border-color: var(--danger);
             color: var(--danger);
-            padding: 2px 0;
-            font-size: 8.5px;
+            padding: 1px 0;
+            font-size: 8px;
             opacity: 0.8;
         }
 
@@ -764,7 +766,6 @@
             user-select: none;
         }
 
-        /* 기본 마커 (하트 0개): 어두운 배경 + 밝은 글씨 */
         .custom-map-pin {
             background: var(--c-charcoal);
             color: var(--text-main);
@@ -809,7 +810,6 @@
             z-index: 1;
         }
 
-        /* 💖 추천받은 마커 (하트 1개 이상): 밝은 배경 + 어두운 글씨로 한눈에 강조 */
         .custom-map-pin-wrap.has-likes .custom-map-pin {
             background: var(--text-main) !important;
             color: var(--c-charcoal) !important;
@@ -833,13 +833,11 @@
             line-height: 1;
         }
 
-        /* 하트가 있을 때 핀 내부의 하트 뱃지 */
         .custom-map-pin-wrap.has-likes .pin-like-badge {
             background: rgba(181, 83, 74, 0.15);
             color: var(--danger);
         }
 
-        /* 하트가 0개일 때 핀 내부의 하트 뱃지 */
         .custom-map-pin-wrap:not(.has-likes) .pin-like-badge {
             color: var(--text-sub);
             opacity: 0.65;
@@ -1067,11 +1065,30 @@
             word-break: keep-all;
         }
 
+        /* 상세 모달 내 링크 관리 버튼 */
+        .detail-media-btn {
+            background: var(--card-surface);
+            border: 1px solid var(--c-earth);
+            color: var(--text-main);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .detail-media-btn:hover {
+            border-color: var(--c-camel);
+        }
+
         .detail-bridge-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .bridge-btn {
@@ -1209,6 +1226,193 @@
         #fullscreen-prev { left: 14px; }
         #fullscreen-next { right: 14px; }
 
+        /* 📺 유튜브/블로그 아카이브 링크 모달 */
+        #media-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(19, 23, 26, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4500;
+            padding: 16px;
+        }
+
+        .media-box {
+            width: 100%;
+            max-width: 420px;
+            background: var(--c-charcoal);
+            border: 1px solid var(--c-earth);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .media-header {
+            padding: 10px 14px;
+            background: var(--card-surface);
+            border-bottom: 1px solid var(--c-earth);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .media-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .media-close-btn {
+            background: none;
+            border: none;
+            font-size: 13px;
+            color: var(--text-sub);
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .media-body {
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .media-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .media-item {
+            background: var(--card-surface);
+            border: 1px solid var(--c-earth);
+            border-radius: 6px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: 0.15s;
+            cursor: pointer;
+            gap: 8px;
+        }
+        .media-item:hover {
+            border-color: var(--c-camel);
+            background: #2f373e;
+        }
+
+        .media-item-left {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .media-item-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .media-type-badge {
+            font-size: 8px;
+            font-weight: 900;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .media-type-badge.youtube { background: var(--youtube); }
+        .media-type-badge.blog { background: var(--blog); }
+        .media-type-badge.web { background: var(--c-blue); }
+
+        .media-desc-text {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-memo-text {
+            font-size: 9.5px;
+            color: var(--c-camel);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .media-author-text {
+            font-size: 8px;
+            color: var(--text-sub);
+            opacity: 0.8;
+        }
+
+        .media-item-del-btn {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .media-empty-msg {
+            text-align: center;
+            font-size: 10.5px;
+            color: var(--text-sub);
+            padding: 16px 8px;
+        }
+
+        .media-add-form {
+            background: var(--input-bg);
+            border: 1px solid var(--c-earth);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .media-form-title {
+            font-size: 10.5px;
+            font-weight: 800;
+            color: var(--c-camel);
+        }
+
+        .media-form-input {
+            width: 100%;
+            font-size: 11px;
+            padding: 6px 8px;
+        }
+
+        .media-submit-btn {
+            background: var(--c-blue);
+            color: #fff;
+            border: 1px solid var(--c-blue);
+            padding: 7px;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
         /* 댓글 모달 */
         .chat-window {
             position: absolute;
@@ -1291,7 +1495,7 @@
             transform: translateX(-50%) translateY(8px);
             opacity: 0;
             pointer-events: none;
-            z-index: 4000;
+            z-index: 5500;
             min-width: 140px;
             max-width: 85%;
             padding: 6px 10px;
@@ -1488,6 +1692,15 @@
                 </div>
             </div>
 
+            <!-- 📺 유튜브/블로그 링크 관리 버튼 (정상 복구 완료) -->
+            <button type="button" class="detail-media-btn" id="modal-media-open-btn">
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <svg class="icon-svg" style="color:var(--youtube);" width="15" height="15" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+                    <span>유튜브 및 블로그 리뷰 링크</span>
+                </span>
+                <span id="modal-media-count-badge" style="color:var(--c-camel); font-size:10px;">0개 등록 ↗</span>
+            </button>
+
             <div class="detail-bridge-actions">
                 <a class="bridge-btn bridge-naver" id="modal-naver-btn" href="#" target="_blank">
                     <span>네이버 지도로 열기 ↗</span>
@@ -1495,6 +1708,30 @@
                 <a class="bridge-btn bridge-kakao" id="modal-kakao-btn" href="#" target="_blank">
                     <span>카카오맵으로 열기 ↗</span>
                 </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📺 유튜브/블로그 아카이브 링크 모달 -->
+<div id="media-modal">
+    <div class="media-box">
+        <div class="media-header">
+            <div class="media-title">
+                <svg class="icon-svg" style="color:var(--youtube);" width="16" height="16" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+                <span id="media-modal-camp-name">리뷰 및 영상 링크</span>
+            </div>
+            <button type="button" class="media-close-btn" id="media-modal-close-btn">✕ 닫기</button>
+        </div>
+        <div class="media-body">
+            <div class="media-list" id="media-items-container"></div>
+            
+            <div class="media-add-form">
+                <span class="media-form-title">+ 새 유튜브/블로그 링크 등록</span>
+                <input type="text" class="media-form-input" id="media-input-url" placeholder="URL 붙여넣기 (유튜브 또는 블로그)" />
+                <input type="text" class="media-form-input" id="media-input-title" placeholder="간단 설명 (예: 5분만에 보는 사이트 총정리)" />
+                <input type="text" class="media-form-input" id="media-input-memo" placeholder="타임스탬프/메모 (예: 03:45 A2 사이트 뷰)" />
+                <button type="button" class="media-submit-btn" id="media-submit-btn">링크 등록하기</button>
             </div>
         </div>
     </div>
@@ -1544,6 +1781,7 @@
     let isCompactList = false;
 
     let activeDetailSiteId = null;
+    let activeMediaSiteId = null;
     let currentModalImgList = [];
     let currentSlideIdx = 0;
     let currentSlideCount = 1;
@@ -2048,7 +2286,8 @@
                 images: imagesList,
                 recommender: currentUser,
                 likes: {},
-                comments: {}
+                comments: {},
+                mediaLinks: {}
             });
 
             searchInput.value = '';
@@ -2099,7 +2338,7 @@
         }
     }
 
-    // ⭐ 대표 사진 지정 클릭 이벤트: 선택한 사진을 인덱스 1번(0번째)으로 재배치하여 저장
+    // ⭐ 대표 사진 지정 클릭 이벤트
     setRepImgBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!activeDetailSiteId || !currentModalImgList.length) return;
@@ -2174,7 +2413,6 @@
         }
     }, { passive: true });
 
-    // 🖼️ 상세 모달 사진 클릭 시 -> 전체화면 뷰어 오픈
     sliderWrap.addEventListener('click', (e) => {
         if (e.target.closest('.slider-nav-btn') || e.target.closest('.set-rep-img-btn') || e.target.closest('.detail-close-btn')) {
             return;
@@ -2273,7 +2511,137 @@
         }
     });
 
-    // 🌁 상세 모달 열기: 대표사진이 언제나 1번(인덱스 0)으로 오도록 보장
+    // ==========================================
+    // 📺 유튜브/블로그 아카이브 링크 모달 로직
+    // ==========================================
+    const mediaModal = document.getElementById('media-modal');
+    const mediaCloseBtn = document.getElementById('media-modal-close-btn');
+    const mediaItemsContainer = document.getElementById('media-items-container');
+    const mediaCampName = document.getElementById('media-modal-camp-name');
+    const mediaInputUrl = document.getElementById('media-input-url');
+    const mediaInputTitle = document.getElementById('media-input-title');
+    const mediaInputMemo = document.getElementById('media-input-memo');
+    const mediaSubmitBtn = document.getElementById('media-submit-btn');
+    const modalMediaOpenBtn = document.getElementById('modal-media-open-btn');
+
+    mediaCloseBtn.addEventListener('click', () => { mediaModal.style.display = 'none'; });
+    mediaModal.addEventListener('click', (e) => { if (e.target === mediaModal) mediaModal.style.display = 'none'; });
+
+    modalMediaOpenBtn.addEventListener('click', () => {
+        if (activeDetailSiteId) openMediaModal(activeDetailSiteId);
+    });
+
+    function detectMediaType(url) {
+        if (/youtube\.com|youtu\.be/i.test(url)) return 'youtube';
+        if (/blog\.naver\.com|tistory\.com|brunch\.co\.kr/i.test(url)) return 'blog';
+        return 'web';
+    }
+
+    function formatMediaUrlWithTimestamp(rawUrl, memoText) {
+        if (!/youtube\.com|youtu\.be/i.test(rawUrl)) return rawUrl;
+        
+        const timeMatch = (memoText || '').match(/(?:(\d+)[시:]\s*)?(\d+)[분:]\s*(\d+)[초]?/) || (memoText || '').match(/(\d+):(\d+)/);
+        if (timeMatch && !rawUrl.includes('&t=') && !rawUrl.includes('?t=')) {
+            let totalSeconds = 0;
+            if (timeMatch.length === 4 && timeMatch[1]) {
+                totalSeconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+            } else if (timeMatch[1] && timeMatch[2]) {
+                totalSeconds = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
+            }
+            if (totalSeconds > 0) {
+                const delimiter = rawUrl.includes('?') ? '&' : '?';
+                return `${rawUrl}${delimiter}t=${totalSeconds}`;
+            }
+        }
+        return rawUrl;
+    }
+
+    window.openMediaModal = (siteId) => {
+        activeMediaSiteId = siteId;
+        const site = sitesCache[siteId];
+        if (!site) return;
+
+        mediaCampName.textContent = `${site.campName} - 리뷰 & 영상 링크`;
+        renderMediaItems(site.mediaLinks || {});
+        mediaModal.style.display = 'flex';
+    };
+
+    function renderMediaItems(linksObj) {
+        mediaItemsContainer.innerHTML = '';
+        const items = Object.entries(linksObj).map(([id, link]) => ({ id, ...link }));
+
+        if (items.length === 0) {
+            mediaItemsContainer.innerHTML = '<div class="media-empty-msg">등록된 영상이나 블로그 링크가 없습니다.<br>아래에서 첫 번째 리뷰 링크를 추가해보세요!</div>';
+            return;
+        }
+
+        items.forEach(item => {
+            const type = item.type || detectMediaType(item.url);
+            const typeLabel = type === 'youtube' ? '유튜브' : (type === 'blog' ? '블로그' : '웹링크');
+            const typeClass = type;
+
+            const card = document.createElement('div');
+            card.className = 'media-item';
+            card.innerHTML = `
+                <div class="media-item-left" onclick="window.open('${escapeHtml(item.url)}', '_blank')">
+                    <div class="media-item-header">
+                        <span class="media-type-badge ${typeClass}">${typeLabel}</span>
+                        <span class="media-desc-text">${escapeHtml(item.title || '캠핑장 상세 리뷰 보기')}</span>
+                    </div>
+                    ${item.memo ? `<div class="media-memo-text">⏱ ${escapeHtml(item.memo)}</div>` : ''}
+                    <div class="media-author-text">by ${escapeHtml(item.user || '알 수 없음')}</div>
+                </div>
+                <button type="button" class="media-item-del-btn" onclick="deleteMediaLink('${item.id}')" title="삭제">삭제</button>
+            `;
+            mediaItemsContainer.appendChild(card);
+        });
+    }
+
+    mediaSubmitBtn.addEventListener('click', async () => {
+        const rawUrl = mediaInputUrl.value.trim();
+        const title = mediaInputTitle.value.trim();
+        const memo = mediaInputMemo.value.trim();
+
+        if (!rawUrl) { showToast("URL 주소를 입력해주세요."); return; }
+        if (!/^https?:\/\//i.test(rawUrl)) { showToast("http:// 또는 https:// 포함된 전체 주소를 넣어주세요."); return; }
+
+        const finalUrl = formatMediaUrlWithTimestamp(rawUrl, memo);
+        const type = detectMediaType(rawUrl);
+
+        try {
+            mediaSubmitBtn.disabled = true;
+            const newLinkRef = push(ref(db, `sites/${activeMediaSiteId}/mediaLinks`));
+            await set(newLinkRef, {
+                url: finalUrl,
+                title: title || (type === 'youtube' ? '유튜브 영상 리뷰' : '블로그 캠핑 후기'),
+                memo: memo,
+                type: type,
+                user: currentUser,
+                timestamp: Date.now()
+            });
+
+            mediaInputUrl.value = '';
+            mediaInputTitle.value = '';
+            mediaInputMemo.value = '';
+            showToast("링크가 추가되었습니다!");
+        } catch (e) {
+            showToast("등록 실패");
+        } finally {
+            mediaSubmitBtn.disabled = false;
+        }
+    });
+
+    window.deleteMediaLink = async (linkId) => {
+        if (!confirm("이 링크를 삭제하시겠습니까?")) return;
+        try {
+            await remove(ref(db, `sites/${activeMediaSiteId}/mediaLinks/${linkId}`));
+            showToast("링크가 삭제되었습니다.");
+        } catch (e) {
+            showToast("삭제 실패");
+        }
+    };
+
+    // 🌁 상세 모달 열기
     window.openDetailBridge = async (siteId) => {
         const site = sitesCache[siteId];
         if (!site) return;
@@ -2287,7 +2655,6 @@
         let rawList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
         const repImg = site.img || rawList[0] || DEFAULT_THUMB;
 
-        // 대표사진(site.img)을 항상 목록의 1번(0번째 인덱스)으로 정렬
         currentModalImgList = [repImg, ...rawList.filter(u => u !== repImg)];
 
         sliderTrack.innerHTML = '';
@@ -2321,6 +2688,9 @@
         document.getElementById('modal-travel').textContent = `별양: 약 ${travel['별양'].time} (${travel['별양'].distance}km) / 망원: 약 ${travel['망원'].time} (${travel['망원'].distance}km)`;
         document.getElementById('modal-recommender').textContent = `${site.recommender || '알 수 없음'}`;
 
+        const mediaCount = Object.keys(site.mediaLinks || {}).length;
+        document.getElementById('modal-media-count-badge').textContent = `${mediaCount}개 등록 ↗`;
+
         document.getElementById('modal-naver-btn').href = site.url || `https://map.naver.com/v5/search/${encodeURIComponent(site.campName)}`;
         document.getElementById('modal-kakao-btn').href = site.kakaoUrl || `https://map.kakao.com/link/search/${encodeURIComponent(site.campName)}`;
 
@@ -2349,7 +2719,7 @@
         return unread;
     }
 
-    // 🌟 가중 참여 점수 인기순 정렬 및 지도 마커 렌더링
+    // 🌟 가중 참여 점수 인기순 정렬 및 리스트 렌더링
     function renderSitesList() {
         const listContainer = document.getElementById('camp-list');
         listContainer.innerHTML = '';
@@ -2404,6 +2774,9 @@
             const totalCommentCount = Object.keys(commentsObj).length;
             const unreadCount = getUnreadCommentCount(site.id, commentsObj);
 
+            const mediaLinksObj = site.mediaLinks || {};
+            const mediaCount = Object.keys(mediaLinksObj).length;
+
             const lat = site.lat || 37.5666;
             const lng = site.lng || 126.9784;
             const travel = calculateTravelInfo(lat, lng);
@@ -2411,9 +2784,7 @@
 
             const position = new naver.maps.LatLng(lat, lng);
             
-            // 📍 하트 1개 이상 유무에 따라 클래스 부여 및 하트수 뱃지 표기
             const hasLikesClass = likeCount > 0 ? 'has-likes' : '';
-            const tentIconColor = likeCount > 0 ? 'var(--c-camel)' : 'var(--c-camel)';
 
             const marker = new naver.maps.Marker({
                 position: position,
@@ -2422,7 +2793,7 @@
                     content: `
                         <div class="custom-map-pin-wrap ${hasLikesClass}" onclick="openDetailBridge('${site.id}')">
                             <div class="custom-map-pin">
-                                <svg class="icon-svg" style="color:${tentIconColor};" width="11" height="11" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
+                                <svg class="icon-svg" style="color:var(--c-camel);" width="11" height="11" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
                                 <span>${escapeHtml(site.campName)}</span>
                                 <span class="pin-like-badge">♥ ${likeCount}</span>
                             </div>
@@ -2460,6 +2831,9 @@
                         <div class="card-right-actions">
                             <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
                                 <span>♥</span> <span>${likeCount}</span>
+                            </button>
+                            <button class="side-action-btn" onclick="event.stopPropagation(); openMediaModal('${site.id}')" title="유튜브/블로그 링크">
+                                <span>📺</span> <span>${mediaCount}</span>
                             </button>
                             <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
                                 ${unreadCount > 0 ? `<div class="unread-comment-badge">${unreadCount}</div>` : ''}
@@ -2503,12 +2877,16 @@
 
                         <div class="card-right-actions">
                             <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
-                                <svg class="icon-svg" width="11" height="11" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                <svg class="icon-svg" width="10" height="10" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                                 <span>${likeCount}</span>
+                            </button>
+                            <button class="side-action-btn" onclick="event.stopPropagation(); openMediaModal('${site.id}')" title="유튜브/블로그 링크">
+                                <svg class="icon-svg" style="color:var(--youtube);" width="11" height="11" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+                                <span>${mediaCount}</span>
                             </button>
                             <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
                                 ${unreadCount > 0 ? `<div class="unread-comment-badge">${unreadCount}</div>` : ''}
-                                <svg class="icon-svg" style="color:var(--text-sub);" width="11" height="11" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                                <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
                                 <span>${totalCommentCount}</span>
                             </button>
                             <button class="side-action-btn delete-btn" onclick="event.stopPropagation(); deleteCamp('${site.id}')" title="삭제">
@@ -2526,6 +2904,15 @@
         onValue(ref(db, 'sites'), (snapshot) => {
             sitesCache = snapshot.val() || {};
             renderSitesList();
+
+            if (activeMediaSiteId && sitesCache[activeMediaSiteId]) {
+                renderMediaItems(sitesCache[activeMediaSiteId].mediaLinks || {});
+            }
+            if (activeDetailSiteId && sitesCache[activeDetailSiteId]) {
+                const mediaCount = Object.keys(sitesCache[activeDetailSiteId].mediaLinks || {}).length;
+                const badgeEl = document.getElementById('modal-media-count-badge');
+                if (badgeEl) badgeEl.textContent = `${mediaCount}개 등록 ↗`;
+            }
         });
     }
 
