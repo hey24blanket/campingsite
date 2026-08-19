@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>ㅅㅅ 9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -161,7 +161,7 @@
             background-color: var(--bg-color);
         }
 
-        /* 🗺️ 네이버 지도 다크 톤 필터 (타일만 정밀 반전) */
+        /* 🗺️ 네이버 지도 다크 톤 필터 */
         #map {
             width: 100%;
             height: 100%;
@@ -848,6 +848,7 @@
             overflow: hidden;
             user-select: none;
             touch-action: pan-y;
+            cursor: zoom-in;
         }
 
         .detail-slider-track {
@@ -1057,6 +1058,116 @@
             border: 1px solid #e0ca00;
         }
 
+        /* 🖼️ 전체화면 고화질 포토 뷰어 (Full-screen Lightbox) */
+        #fullscreen-viewer {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 12, 14, 0.96);
+            backdrop-filter: blur(10px);
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .fullscreen-topbar {
+            position: absolute;
+            top: max(14px, env(safe-area-inset-top));
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5010;
+        }
+
+        .fullscreen-counter {
+            background: rgba(33, 38, 43, 0.8);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 14px;
+            border: 1px solid var(--c-earth);
+        }
+
+        .fullscreen-close-btn {
+            background: rgba(33, 38, 43, 0.85);
+            color: var(--text-main);
+            border: 1px solid var(--c-earth);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .fullscreen-slider-wrap {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .fullscreen-slider-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .fullscreen-slide {
+            min-width: 100%;
+            width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 55px 12px;
+        }
+
+        .fullscreen-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .fullscreen-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(33, 38, 43, 0.75);
+            color: var(--text-main);
+            border: 1px solid var(--c-earth);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5010;
+            transition: 0.15s;
+        }
+        .fullscreen-nav-btn:hover {
+            background: var(--c-blue);
+            border-color: #fff;
+        }
+        #fullscreen-prev { left: 14px; }
+        #fullscreen-next { right: 14px; }
+
         /* 댓글 모달 */
         .chat-window {
             position: absolute;
@@ -1201,6 +1312,14 @@
                 padding-bottom: env(safe-area-inset-bottom);
                 height: 48dvh;
             }
+
+            .fullscreen-nav-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+            }
+            #fullscreen-prev { left: 8px; }
+            #fullscreen-next { right: 8px; }
         }
     </style>
 </head>
@@ -1241,7 +1360,6 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
-        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1286,7 +1404,7 @@
 <!-- 🌁 UX 브릿지 상세정보 팝업 모달 -->
 <div id="detail-modal">
     <div class="detail-box">
-        <div class="detail-slider-wrap" id="detail-slider">
+        <div class="detail-slider-wrap" id="detail-slider" title="클릭하여 큰 화면으로 보기">
             <div class="detail-slider-track" id="slider-track"></div>
             
             <button type="button" class="set-rep-img-btn" id="set-rep-img-btn" title="현재 사진을 대표사진으로 설정">
@@ -1338,6 +1456,19 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- 🖼️ 전체화면 고화질 포토 뷰어 (Full-screen Lightbox) -->
+<div id="fullscreen-viewer">
+    <div class="fullscreen-topbar">
+        <span class="fullscreen-counter" id="fullscreen-counter">1 / 15</span>
+        <button type="button" class="fullscreen-close-btn" id="fullscreen-close-btn">✕</button>
+    </div>
+    <div class="fullscreen-slider-wrap" id="fullscreen-slider-wrap">
+        <div class="fullscreen-slider-track" id="fullscreen-slider-track"></div>
+    </div>
+    <button type="button" class="fullscreen-nav-btn" id="fullscreen-prev">‹</button>
+    <button type="button" class="fullscreen-nav-btn" id="fullscreen-next">›</button>
 </div>
 
 <div id="toast"></div>
@@ -1697,7 +1828,6 @@
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
     closeSearchBtn.addEventListener('click', () => { resultsBox.style.display = 'none'; });
 
-    // 1) 구글 장소 검색 (Google Places Service)
     async function searchGooglePlaces(keyword) {
         return new Promise((resolve) => {
             if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
@@ -1729,7 +1859,6 @@
         });
     }
 
-    // 2) 카카오 장소 검색 (SDK)
     async function searchKakaoPlacesSDK(keyword) {
         return new Promise((resolve) => {
             if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
@@ -1748,7 +1877,6 @@
         });
     }
 
-    // 3) 카카오 REST 키워드 검색
     async function searchKakaoRestKeyword(keyword) {
         try {
             const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(keyword)}`;
@@ -1763,7 +1891,6 @@
         return [];
     }
 
-    // 4) 통합 듀얼 연쇄 탐색 실행
     async function performSearch() {
         const rawQuery = searchInput.value.trim();
         if (!rawQuery) { showToast("캠핑장 이름을 입력해주세요."); return; }
@@ -1782,7 +1909,6 @@
             cleanNoSpaceQuery
         ].filter((q, idx, arr) => q && arr.indexOf(q) === idx);
 
-        // 카카오 + 구글 동시 병렬 듀얼 검색
         const searchTasks = [];
         for (const q of queryVariations) {
             searchTasks.push(searchGooglePlaces(q));
@@ -1793,7 +1919,6 @@
         const taskResults = await Promise.all(searchTasks);
         const combined = taskResults.flat().filter(Boolean);
 
-        // 중복 제거 (이름과 주소 앞부분 기준)
         const finalResults = [];
         const seenKeys = new Set();
 
@@ -1986,6 +2111,107 @@
         }
     }, { passive: true });
 
+    // 🖼️ 상세 모달 사진 클릭 시 -> 전체화면 뷰어 오픈
+    sliderWrap.addEventListener('click', (e) => {
+        if (e.target.closest('.slider-nav-btn') || e.target.closest('.set-rep-img-btn') || e.target.closest('.detail-close-btn')) {
+            return;
+        }
+        openFullscreenViewer(currentSlideIdx);
+    });
+
+    // ==========================================
+    // 🖼️ 전체화면 고화질 포토 뷰어 로직
+    // ==========================================
+    const fullscreenViewer = document.getElementById('fullscreen-viewer');
+    const fullscreenTrack = document.getElementById('fullscreen-slider-track');
+    const fullscreenCounter = document.getElementById('fullscreen-counter');
+    const fullscreenCloseBtn = document.getElementById('fullscreen-close-btn');
+    const fullscreenPrevBtn = document.getElementById('fullscreen-prev');
+    const fullscreenNextBtn = document.getElementById('fullscreen-next');
+    const fullscreenWrap = document.getElementById('fullscreen-slider-wrap');
+
+    let fullscreenIdx = 0;
+
+    function updateFullscreenPosition() {
+        fullscreenTrack.style.transform = `translateX(-${fullscreenIdx * 100}%)`;
+        fullscreenCounter.textContent = `${fullscreenIdx + 1} / ${currentSlideCount}`;
+    }
+
+    function openFullscreenViewer(startIdx = 0) {
+        if (!currentModalImgList || currentModalImgList.length === 0) return;
+
+        fullscreenIdx = startIdx;
+        fullscreenTrack.innerHTML = '';
+
+        currentModalImgList.forEach((src, idx) => {
+            const slide = document.createElement('div');
+            slide.className = 'fullscreen-slide';
+            slide.innerHTML = `<img referrerpolicy="no-referrer" src="${escapeHtml(src)}" alt="캠핑장 사진 ${idx+1}" onerror="this.src='${DEFAULT_THUMB}'" />`;
+            fullscreenTrack.appendChild(slide);
+        });
+
+        updateFullscreenPosition();
+        fullscreenViewer.style.display = 'flex';
+    }
+
+    function closeFullscreenViewer() {
+        fullscreenViewer.style.display = 'none';
+        currentSlideIdx = fullscreenIdx; // 상세 모달 위치와 동기화
+        updateSliderPosition();
+    }
+
+    fullscreenCloseBtn.addEventListener('click', closeFullscreenViewer);
+
+    fullscreenPrevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentSlideCount <= 1) return;
+        fullscreenIdx = (fullscreenIdx - 1 + currentSlideCount) % currentSlideCount;
+        updateFullscreenPosition();
+    });
+
+    fullscreenNextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentSlideCount <= 1) return;
+        fullscreenIdx = (fullscreenIdx + 1) % currentSlideCount;
+        updateFullscreenPosition();
+    });
+
+    // 전체화면 터치 스와이프
+    let fsTouchStartX = 0;
+    fullscreenWrap.addEventListener('touchstart', (e) => {
+        fsTouchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    fullscreenWrap.addEventListener('touchend', (e) => {
+        const fsTouchEndX = e.changedTouches[0].clientX;
+        const diffX = fsTouchStartX - fsTouchEndX;
+
+        if (currentSlideCount <= 1) return;
+
+        if (diffX > 40) {
+            fullscreenIdx = (fullscreenIdx + 1) % currentSlideCount;
+            updateFullscreenPosition();
+        } else if (diffX < -40) {
+            fullscreenIdx = (fullscreenIdx - 1 + currentSlideCount) % currentSlideCount;
+            updateFullscreenPosition();
+        }
+    }, { passive: true });
+
+    // 키보드 방향키 및 ESC 지원
+    window.addEventListener('keydown', (e) => {
+        if (fullscreenViewer.style.display === 'flex') {
+            if (e.key === 'ArrowLeft') {
+                fullscreenIdx = (fullscreenIdx - 1 + currentSlideCount) % currentSlideCount;
+                updateFullscreenPosition();
+            } else if (e.key === 'ArrowRight') {
+                fullscreenIdx = (fullscreenIdx + 1) % currentSlideCount;
+                updateFullscreenPosition();
+            } else if (e.key === 'Escape') {
+                closeFullscreenViewer();
+            }
+        }
+    });
+
     window.openDetailBridge = async (siteId) => {
         const site = sitesCache[siteId];
         if (!site) return;
@@ -2056,7 +2282,6 @@
         return unread;
     }
 
-    // 🌟 가중 참여 점수(Weighted Engagement Score) 인기순 정렬 적용
     function renderSitesList() {
         const listContainer = document.getElementById('camp-list');
         listContainer.innerHTML = '';
@@ -2083,14 +2308,13 @@
                 const aComments = Object.keys(a.comments || {}).length;
                 const bComments = Object.keys(b.comments || {}).length;
 
-                // 쇼핑몰/커뮤니티 가중 결합 인기순 공식 (하트: 3점, 댓글: 1.5점)
                 const aScore = (aLikes * 3) + (aComments * 1.5);
                 const bScore = (bLikes * 3) + (bComments * 1.5);
 
                 if (bScore !== aScore) {
                     return bScore - aScore;
                 }
-                return bLikes - aLikes; // 동점 시 하트 수가 더 많은 순
+                return bLikes - aLikes;
             } else if (currentSortMode === 'byeolyang') {
                 const aDist = calculateTravelInfo(a.lat || 37.5666, a.lng || 126.9784)['별양'].distKmVal;
                 const bDist = calculateTravelInfo(b.lat || 37.5666, b.lng || 126.9784)['별양'].distKmVal;
