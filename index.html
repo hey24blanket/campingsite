@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>ㅁㅁㅁ 9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,10 +11,13 @@
     <meta name="apple-mobile-web-app-title" content="9/11 2박">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/hey24blanket/camping-menu/refs/heads/main/hero_00000.png">
 
-    <!-- 네이버 지도 API -->
+    <!-- 1. 네이버 지도 API (지도 렌더링 전용) -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
-    <!-- 카카오 장소 검색 API -->
+    <!-- 2. 카카오 SDK (장소 및 이미지 검색) -->
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services"></script>
+    <!-- 3. 구글 장소 검색 API (Google Places SDK) -->
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc88iJ3xsrQV8A6xcZrwra-WEALgUEeHQ&libraries=places"></script>
+    
     <style>
         :root {
             /* 지정 컬러 팔레트 */
@@ -432,10 +435,30 @@
             overflow: hidden;
         }
 
+        .res-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .res-source-tag {
+            font-size: 8px;
+            font-weight: 800;
+            padding: 1px 3px;
+            border-radius: 2px;
+            background: var(--c-earth);
+            color: #fff;
+        }
+        .res-source-tag.google { background: #4285F4; }
+        .res-source-tag.kakao { background: #FEE500; color: #111; }
+
         .res-title {
             font-weight: 800;
             font-size: 10.5px;
             color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .res-addr {
@@ -458,7 +481,7 @@
             white-space: nowrap;
         }
 
-        /* 카드 목록 컨테이너 */
+        /* 카드 목록 */
         .camp-list-container {
             flex: 1;
             overflow-y: auto;
@@ -1218,6 +1241,7 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
+        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1249,7 +1273,7 @@
 
             <div id="search-results-box">
                 <div class="search-box-title">
-                    <span>검색 결과 선택</span>
+                    <span>🔍 검색 결과 선택 (카카오+구글 듀얼)</span>
                     <button type="button" class="close-res-btn" id="close-search-btn">✕ 닫기</button>
                 </div>
                 <div id="search-results-list" style="display:flex; flex-direction:column; gap:3px;"></div>
@@ -1660,7 +1684,9 @@
         }
     }
 
-    // 💡 스마트 하이브리드 연쇄 검색 헬퍼들
+    // ==========================================
+    // 🌐 [카카오 + 구글] 듀얼 하이브리드 검색 엔진
+    // ==========================================
     const searchInput = document.getElementById('camp-search-input');
     const searchBtn = document.getElementById('search-btn');
     const resultsBox = document.getElementById('search-results-box');
@@ -1671,121 +1697,73 @@
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
     closeSearchBtn.addEventListener('click', () => { resultsBox.style.display = 'none'; });
 
+    // 1) 구글 장소 검색 (Google Places Service)
+    async function searchGooglePlaces(keyword) {
+        return new Promise((resolve) => {
+            if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                return resolve([]);
+            }
+            try {
+                const service = new google.maps.places.PlacesService(document.createElement('div'));
+                service.textSearch({ query: keyword }, (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+                        const items = results.slice(0, 5).map(r => ({
+                            place_name: r.name,
+                            road_address_name: r.formatted_address ? r.formatted_address.replace(/^대한민국\s*/, '') : '',
+                            address_name: r.formatted_address ? r.formatted_address.replace(/^대한민국\s*/, '') : '',
+                            x: r.geometry ? r.geometry.location.lng() : 0,
+                            y: r.geometry ? r.geometry.location.lat() : 0,
+                            phone: r.formatted_phone_number || '',
+                            category_name: '캠핑,야영장',
+                            place_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}&query_place_id=${r.place_id || ''}`,
+                            source: 'google'
+                        }));
+                        resolve(items);
+                    } else {
+                        resolve([]);
+                    }
+                });
+            } catch (e) {
+                resolve([]);
+            }
+        });
+    }
+
+    // 2) 카카오 장소 검색 (SDK)
     async function searchKakaoPlacesSDK(keyword) {
         return new Promise((resolve) => {
             if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
                 const ps = new kakao.maps.services.Places();
                 ps.keywordSearch(keyword, (data, status) => {
                     if (status === kakao.maps.services.Status.OK && data && data.length > 0) {
-                        resolve(data);
+                        const items = data.map(d => ({ ...d, source: 'kakao' }));
+                        resolve(items);
                     } else {
-                        resolve(null);
+                        resolve([]);
                     }
                 });
             } else {
-                resolve(null);
+                resolve([]);
             }
         });
     }
 
+    // 3) 카카오 REST 키워드 검색
     async function searchKakaoRestKeyword(keyword) {
         try {
             const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(keyword)}`;
             const response = await fetch(restUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } });
             if (response.ok) {
                 const resData = await response.json();
-                if (resData.documents && resData.documents.length > 0) return resData.documents;
-            }
-        } catch (e) {}
-        return null;
-    }
-
-    async function searchKakaoAddress(addr) {
-        try {
-            const restUrl = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(addr)}`;
-            const response = await fetch(restUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } });
-            if (response.ok) {
-                const resData = await response.json();
                 if (resData.documents && resData.documents.length > 0) {
-                    const doc = resData.documents[0];
-                    return {
-                        x: parseFloat(doc.x),
-                        y: parseFloat(doc.y),
-                        road_address_name: doc.road_address ? doc.road_address.address_name : '',
-                        address_name: doc.address ? doc.address.address_name : doc.address_name
-                    };
+                    return resData.documents.map(d => ({ ...d, source: 'kakao' }));
                 }
             }
         } catch (e) {}
-        return null;
+        return [];
     }
 
-    // 🌐 웹/블로그/지식백과 문서 기반 실시간 주소 및 전화번호 자동 추출 (신생/비공식 상호명 대응)
-    async function searchWebAndBlogFallback(keyword) {
-        try {
-            const blogUrl = `https://dapi.kakao.com/v2/search/blog?query=${encodeURIComponent(keyword)}&size=10`;
-            const webUrl = `https://dapi.kakao.com/v2/search/web?query=${encodeURIComponent(keyword)}&size=10`;
-            
-            const [blogRes, webRes] = await Promise.all([
-                fetch(blogUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } }).then(r => r.ok ? r.json() : { documents: [] }).catch(() => ({ documents: [] })),
-                fetch(webUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } }).then(r => r.ok ? r.json() : { documents: [] }).catch(() => ({ documents: [] }))
-            ]);
-
-            const allDocs = [...(blogRes.documents || []), ...(webRes.documents || [])];
-            if (allDocs.length === 0) return null;
-
-            const addrRegex = /(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)(?:특별자치도|도|특별시|광역시|특별자치시)?\s+[가-힣]+(?:시|군|구)?\s+[가-힣0-9\s\-]+(?:로|길|번길|면|리|동)\s*[0-9\-]+(?:번지)?/g;
-            const phoneRegex = /(01[016789]-?\d{3,4}-?\d{4}|0507-?\d{4}-?\d{4}|0\d{1,2}-?\d{3,4}-?\d{4})/;
-
-            const foundAddresses = [];
-            const seenAddr = new Set();
-            let extractedPhone = '';
-
-            for (const doc of allDocs) {
-                const text = `${doc.title || ''} ${doc.contents || ''}`.replace(/<[^>]*>?/gm, '');
-                
-                if (!extractedPhone) {
-                    const pMatch = text.match(phoneRegex);
-                    if (pMatch) extractedPhone = pMatch[0];
-                }
-
-                const aMatches = text.match(addrRegex);
-                if (aMatches) {
-                    for (const rawAddr of aMatches) {
-                        const trimmed = rawAddr.trim();
-                        if (!seenAddr.has(trimmed) && trimmed.length > 8) {
-                            seenAddr.add(trimmed);
-                            foundAddresses.push(trimmed);
-                        }
-                    }
-                }
-            }
-
-            if (foundAddresses.length === 0) return null;
-
-            const items = [];
-            for (const addr of foundAddresses.slice(0, 3)) {
-                const geo = await searchKakaoAddress(addr);
-                if (geo) {
-                    items.push({
-                        place_name: keyword,
-                        road_address_name: geo.road_address_name || geo.address_name,
-                        address_name: geo.address_name || geo.road_address_name,
-                        x: geo.x,
-                        y: geo.y,
-                        phone: extractedPhone,
-                        category_name: '캠핑,야영장',
-                        place_url: `https://map.kakao.com/link/search/${encodeURIComponent(keyword)}`
-                    });
-                }
-            }
-
-            return items.length > 0 ? items : null;
-        } catch (e) {
-            return null;
-        }
-    }
-
+    // 4) 통합 듀얼 연쇄 탐색 실행
     async function performSearch() {
         const rawQuery = searchInput.value.trim();
         if (!rawQuery) { showToast("캠핑장 이름을 입력해주세요."); return; }
@@ -1804,29 +1782,36 @@
             cleanNoSpaceQuery
         ].filter((q, idx, arr) => q && arr.indexOf(q) === idx);
 
-        let foundItems = null;
-
-        // 1. 카카오 로컬 장소 검색 연쇄 시도
+        // 카카오 + 구글 동시 병렬 듀얼 검색
+        const searchTasks = [];
         for (const q of queryVariations) {
-            foundItems = await searchKakaoPlacesSDK(q);
-            if (!foundItems) {
-                foundItems = await searchKakaoRestKeyword(q);
-            }
-            if (foundItems && foundItems.length > 0) {
-                break;
-            }
+            searchTasks.push(searchGooglePlaces(q));
+            searchTasks.push(searchKakaoPlacesSDK(q));
+            searchTasks.push(searchKakaoRestKeyword(q));
         }
 
-        // 2. 카카오 장소 검색에 없는 경우, 웹/블로그 문서 기반 주소 추출 시도
-        if (!foundItems || foundItems.length === 0) {
-            foundItems = await searchWebAndBlogFallback(rawQuery);
-        }
+        const taskResults = await Promise.all(searchTasks);
+        const combined = taskResults.flat().filter(Boolean);
+
+        // 중복 제거 (이름과 주소 앞부분 기준)
+        const finalResults = [];
+        const seenKeys = new Set();
+
+        combined.forEach(item => {
+            const name = item.place_name || item.name || '';
+            const addr = item.road_address_name || item.address_name || '';
+            const key = `${name.replace(/\s+/g, '')}_${addr.split(' ').slice(0, 2).join('')}`;
+            if (!seenKeys.has(key) && name) {
+                seenKeys.add(key);
+                finalResults.push(item);
+            }
+        });
 
         searchBtn.innerText = "검색";
         searchBtn.disabled = false;
 
-        if (foundItems && foundItems.length > 0) {
-            renderSearchResults(foundItems);
+        if (finalResults.length > 0) {
+            renderSearchResults(finalResults);
         } else {
             showToast("검색 결과가 없습니다.");
             resultsBox.style.display = 'none';
@@ -1841,19 +1826,24 @@
             return;
         }
 
-        items.slice(0, 5).forEach(item => {
+        items.slice(0, 6).forEach(item => {
             const placeName = item.place_name || item.name;
             const roadAddr = item.road_address_name || '';
             const jibunAddr = item.address_name || '';
             const lat = parseFloat(item.y || item.lat);
             const lng = parseFloat(item.x || item.lng);
+            const source = item.source === 'google' ? '구글' : '카카오';
+            const sourceClass = item.source === 'google' ? 'google' : 'kakao';
 
             const div = document.createElement('div');
             div.className = 'search-result-item';
             div.innerHTML = `
                 <div class="res-info">
-                    <div class="res-title">${escapeHtml(placeName)}</div>
-                    <div class="res-addr">${escapeHtml(roadAddr || jibunAddr)}</div>
+                    <div class="res-title-wrap">
+                        <span class="res-source-tag ${sourceClass}">${source}</span>
+                        <span class="res-title">${escapeHtml(placeName)}</span>
+                    </div>
+                    <div class="res-addr">${escapeHtml(roadAddr || jibunAddr || '주소 정보 제공')}</div>
                 </div>
                 <button type="button" class="add-pin-btn">+ 핀 추가</button>
             `;
