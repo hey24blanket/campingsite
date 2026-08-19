@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>ㅂㅂ 9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1007,7 +1007,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .detail-header-row {
@@ -1065,23 +1065,101 @@
             word-break: keep-all;
         }
 
-        /* 상세 모달 내 링크 관리 버튼 */
-        .detail-media-btn {
+        /* 📺 상세보기 모달 내 직관적 리뷰 링크 영역 (영상 바로보기 카드형 리스트) */
+        .modal-media-section {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
             background: var(--card-surface);
             border: 1px solid var(--c-earth);
-            color: var(--text-main);
             padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 11px;
+            border-radius: 8px;
+        }
+
+        .modal-media-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-media-label {
+            font-size: 10.5px;
             font-weight: 800;
+            color: var(--c-camel);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .modal-media-manage-toggle {
+            background: var(--input-bg);
+            border: 1px solid var(--c-earth);
+            color: var(--text-sub);
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-media-items {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 110px;
+            overflow-y: auto;
+        }
+
+        .modal-media-pill {
+            background: var(--input-bg);
+            border: 1px solid var(--c-earth);
+            border-radius: 6px;
+            padding: 6px 9px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            cursor: pointer;
+            text-decoration: none;
             transition: 0.15s;
+            cursor: pointer;
         }
-        .detail-media-btn:hover {
+        .modal-media-pill:hover {
             border-color: var(--c-camel);
+            background: #2f373e;
+        }
+
+        .pill-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .pill-badge {
+            font-size: 8px;
+            font-weight: 900;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .pill-badge.youtube { background: var(--youtube); }
+        .pill-badge.blog { background: var(--blog); }
+        .pill-badge.web { background: var(--c-blue); }
+
+        .pill-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pill-memo {
+            font-size: 9.5px;
+            color: var(--c-camel);
+            font-weight: 700;
+            flex-shrink: 0;
         }
 
         .detail-bridge-actions {
@@ -1226,7 +1304,66 @@
         #fullscreen-prev { left: 14px; }
         #fullscreen-next { right: 14px; }
 
-        /* 📺 유튜브/블로그 아카이브 링크 모달 */
+        /* 📺 유튜브 인앱 임베디드 플레이어 모달 (앱 내에서 바로 시청) */
+        #video-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 12, 14, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 6000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .video-modal-box {
+            width: 100%;
+            max-width: 720px;
+            background: var(--c-charcoal);
+            border: 1px solid var(--c-earth);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+        }
+
+        .video-modal-header {
+            padding: 10px 14px;
+            background: var(--card-surface);
+            border-bottom: 1px solid var(--c-earth);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .video-modal-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 비율 */
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* ⚙️ 링크 관리 모달 (등록/삭제 전용) */
         #media-modal {
             position: fixed;
             inset: 0;
@@ -1301,14 +1438,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            text-decoration: none;
-            transition: 0.15s;
-            cursor: pointer;
             gap: 8px;
-        }
-        .media-item:hover {
-            border-color: var(--c-camel);
-            background: #2f373e;
         }
 
         .media-item-left {
@@ -1350,15 +1480,6 @@
             font-size: 9.5px;
             color: var(--c-camel);
             font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .media-author-text {
-            font-size: 8px;
-            color: var(--text-sub);
-            opacity: 0.8;
         }
 
         .media-item-del-btn {
@@ -1376,7 +1497,7 @@
             text-align: center;
             font-size: 10.5px;
             color: var(--text-sub);
-            padding: 16px 8px;
+            padding: 12px 8px;
         }
 
         .media-add-form {
@@ -1495,7 +1616,7 @@
             transform: translateX(-50%) translateY(8px);
             opacity: 0;
             pointer-events: none;
-            z-index: 5500;
+            z-index: 6500;
             min-width: 140px;
             max-width: 85%;
             padding: 6px 10px;
@@ -1647,7 +1768,7 @@
     </div>
 </div>
 
-<!-- 🌁 UX 브릿지 상세정보 팝업 모달 -->
+<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (첨부 1 화면) -->
 <div id="detail-modal">
     <div class="detail-box">
         <div class="detail-slider-wrap" id="detail-slider" title="클릭하여 큰 화면으로 보기">
@@ -1692,14 +1813,17 @@
                 </div>
             </div>
 
-            <!-- 📺 유튜브/블로그 링크 관리 버튼 (정상 복구 완료) -->
-            <button type="button" class="detail-media-btn" id="modal-media-open-btn">
-                <span style="display:flex; align-items:center; gap:6px;">
-                    <svg class="icon-svg" style="color:var(--youtube);" width="15" height="15" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
-                    <span>유튜브 및 블로그 리뷰 링크</span>
-                </span>
-                <span id="modal-media-count-badge" style="color:var(--c-camel); font-size:10px;">0개 등록 ↗</span>
-            </button>
+            <!-- 📺 첨부 1에서 바로 영상을 볼 수 있는 직관적인 리뷰 링크 영역 -->
+            <div class="modal-media-section">
+                <div class="modal-media-header-row">
+                    <span class="modal-media-label">
+                        <svg class="icon-svg" style="color:var(--youtube);" width="13" height="13" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+                        <span>참고 영상 및 블로그 리뷰</span>
+                    </span>
+                    <button type="button" class="modal-media-manage-toggle" id="modal-media-manage-btn">⚙️ 링크 추가/관리</button>
+                </div>
+                <div class="modal-media-items" id="modal-media-pills-container"></div>
+            </div>
 
             <div class="detail-bridge-actions">
                 <a class="bridge-btn bridge-naver" id="modal-naver-btn" href="#" target="_blank">
@@ -1713,13 +1837,24 @@
     </div>
 </div>
 
-<!-- 📺 유튜브/블로그 아카이브 링크 모달 -->
+<!-- 📺 유튜브 인앱 임베디드 플레이어 모달 (앱 내에서 지정 타임라인 시점으로 바로 재생) -->
+<div id="video-modal">
+    <div class="video-modal-box">
+        <div class="video-modal-header">
+            <span class="video-modal-title" id="video-modal-title">유튜브 영상 시청</span>
+            <button type="button" class="media-close-btn" id="video-modal-close-btn">✕ 닫기</button>
+        </div>
+        <div class="video-container" id="video-iframe-wrap"></div>
+    </div>
+</div>
+
+<!-- ⚙️ 링크 관리 모달 (첨부 2 화면 - 등록/삭제 전용) -->
 <div id="media-modal">
     <div class="media-box">
         <div class="media-header">
             <div class="media-title">
                 <svg class="icon-svg" style="color:var(--youtube);" width="16" height="16" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
-                <span id="media-modal-camp-name">리뷰 및 영상 링크</span>
+                <span id="media-modal-camp-name">리뷰 링크 관리</span>
             </div>
             <button type="button" class="media-close-btn" id="media-modal-close-btn">✕ 닫기</button>
         </div>
@@ -1729,8 +1864,8 @@
             <div class="media-add-form">
                 <span class="media-form-title">+ 새 유튜브/블로그 링크 등록</span>
                 <input type="text" class="media-form-input" id="media-input-url" placeholder="URL 붙여넣기 (유튜브 또는 블로그)" />
-                <input type="text" class="media-form-input" id="media-input-title" placeholder="간단 설명 (예: 5분만에 보는 사이트 총정리)" />
-                <input type="text" class="media-form-input" id="media-input-memo" placeholder="타임스탬프/메모 (예: 03:45 A2 사이트 뷰)" />
+                <input type="text" class="media-form-input" id="media-input-title" placeholder="간단 설명 (예: 가족 2번 사이트 뷰)" />
+                <input type="text" class="media-form-input" id="media-input-memo" placeholder="타임스탬프/메모 (예: 10분 52초 또는 03:45)" />
                 <button type="button" class="media-submit-btn" id="media-submit-btn">링크 등록하기</button>
             </div>
         </div>
@@ -2338,7 +2473,6 @@
         }
     }
 
-    // ⭐ 대표 사진 지정 클릭 이벤트
     setRepImgBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!activeDetailSiteId || !currentModalImgList.length) return;
@@ -2512,7 +2646,74 @@
     });
 
     // ==========================================
-    // 📺 유튜브/블로그 아카이브 링크 모달 로직
+    // 📺 유튜브 인앱 임베디드 플레이어 및 타임스탬프 로직
+    // ==========================================
+    const videoModal = document.getElementById('video-modal');
+    const videoModalCloseBtn = document.getElementById('video-modal-close-btn');
+    const videoModalTitle = document.getElementById('video-modal-title');
+    const videoIframeWrap = document.getElementById('video-iframe-wrap');
+
+    videoModalCloseBtn.addEventListener('click', () => {
+        videoModal.style.display = 'none';
+        videoIframeWrap.innerHTML = '';
+    });
+    videoModal.addEventListener('click', (e) => {
+        if (e.target === videoModal) {
+            videoModal.style.display = 'none';
+            videoIframeWrap.innerHTML = '';
+        }
+    });
+
+    // 유튜브 URL에서 동영상 ID 및 초(second) 단위 추출
+    function parseYoutubeUrl(url, memoText) {
+        let videoId = '';
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        if (match && match[2].length === 11) {
+            videoId = match[2];
+        }
+
+        let startSeconds = 0;
+        // URL 자체에 t 파라미터가 있는 경우
+        const urlParams = new URLSearchParams(url.split('?')[1] || '');
+        const tParam = urlParams.get('t');
+        if (tParam) {
+            startSeconds = parseInt(tParam.replace('s', '')) || 0;
+        } else if (memoText) {
+            // 메모 텍스트에서 시간 추출 (예: 10분 52초, 03:45 등)
+            const timeMatch = memoText.match(/(?:(\d+)[시:]\s*)?(\d+)[분:]\s*(\d+)[초]?/) || memoText.match(/(\d+):(\d+)/);
+            if (timeMatch) {
+                if (timeMatch.length === 4 && timeMatch[1]) {
+                    startSeconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+                } else if (timeMatch[1] && timeMatch[2]) {
+                    startSeconds = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
+                }
+            }
+        }
+        return { videoId, startSeconds };
+    }
+
+    window.playYoutubeInApp = (url, title, memo) => {
+        const { videoId, startSeconds } = parseYoutubeUrl(url, memo);
+        if (!videoId) {
+            // 유튜브가 아니거나 ID 추출 실패 시 일반 새창 열기
+            window.open(url, '_blank');
+            return;
+        }
+
+        videoModalTitle.textContent = title || '유튜브 영상 시청';
+        videoIframeWrap.innerHTML = `
+            <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&start=${startSeconds}" 
+                    title="YouTube video player" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+            </iframe>
+        `;
+        videoModal.style.display = 'flex';
+    };
+
+    // ==========================================
+    // ⚙️ 링크 관리 모달 로직 (등록/삭제 전용)
     // ==========================================
     const mediaModal = document.getElementById('media-modal');
     const mediaCloseBtn = document.getElementById('media-modal-close-btn');
@@ -2522,12 +2723,12 @@
     const mediaInputTitle = document.getElementById('media-input-title');
     const mediaInputMemo = document.getElementById('media-input-memo');
     const mediaSubmitBtn = document.getElementById('media-submit-btn');
-    const modalMediaOpenBtn = document.getElementById('modal-media-open-btn');
+    const modalMediaManageBtn = document.getElementById('modal-media-manage-btn');
 
     mediaCloseBtn.addEventListener('click', () => { mediaModal.style.display = 'none'; });
     mediaModal.addEventListener('click', (e) => { if (e.target === mediaModal) mediaModal.style.display = 'none'; });
 
-    modalMediaOpenBtn.addEventListener('click', () => {
+    modalMediaManageBtn.addEventListener('click', () => {
         if (activeDetailSiteId) openMediaModal(activeDetailSiteId);
     });
 
@@ -2537,31 +2738,12 @@
         return 'web';
     }
 
-    function formatMediaUrlWithTimestamp(rawUrl, memoText) {
-        if (!/youtube\.com|youtu\.be/i.test(rawUrl)) return rawUrl;
-        
-        const timeMatch = (memoText || '').match(/(?:(\d+)[시:]\s*)?(\d+)[분:]\s*(\d+)[초]?/) || (memoText || '').match(/(\d+):(\d+)/);
-        if (timeMatch && !rawUrl.includes('&t=') && !rawUrl.includes('?t=')) {
-            let totalSeconds = 0;
-            if (timeMatch.length === 4 && timeMatch[1]) {
-                totalSeconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
-            } else if (timeMatch[1] && timeMatch[2]) {
-                totalSeconds = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
-            }
-            if (totalSeconds > 0) {
-                const delimiter = rawUrl.includes('?') ? '&' : '?';
-                return `${rawUrl}${delimiter}t=${totalSeconds}`;
-            }
-        }
-        return rawUrl;
-    }
-
     window.openMediaModal = (siteId) => {
         activeMediaSiteId = siteId;
         const site = sitesCache[siteId];
         if (!site) return;
 
-        mediaCampName.textContent = `${site.campName} - 리뷰 & 영상 링크`;
+        mediaCampName.textContent = `${site.campName} - 리뷰 링크 관리`;
         renderMediaItems(site.mediaLinks || {});
         mediaModal.style.display = 'flex';
     };
@@ -2571,25 +2753,23 @@
         const items = Object.entries(linksObj).map(([id, link]) => ({ id, ...link }));
 
         if (items.length === 0) {
-            mediaItemsContainer.innerHTML = '<div class="media-empty-msg">등록된 영상이나 블로그 링크가 없습니다.<br>아래에서 첫 번째 리뷰 링크를 추가해보세요!</div>';
+            mediaItemsContainer.innerHTML = '<div class="media-empty-msg">등록된 링크가 없습니다. 아래에서 새 링크를 추가해보세요.</div>';
             return;
         }
 
         items.forEach(item => {
             const type = item.type || detectMediaType(item.url);
-            const typeLabel = type === 'youtube' ? '유튜브' : (type === 'blog' ? '블로그' : '웹링크');
-            const typeClass = type;
+            const typeLabel = type === 'youtube' ? '유튜브' : (type === 'blog' ? '블로그' : '웹');
 
             const card = document.createElement('div');
             card.className = 'media-item';
             card.innerHTML = `
-                <div class="media-item-left" onclick="window.open('${escapeHtml(item.url)}', '_blank')">
+                <div class="media-item-left">
                     <div class="media-item-header">
-                        <span class="media-type-badge ${typeClass}">${typeLabel}</span>
-                        <span class="media-desc-text">${escapeHtml(item.title || '캠핑장 상세 리뷰 보기')}</span>
+                        <span class="media-type-badge ${type}">${typeLabel}</span>
+                        <span class="media-desc-text">${escapeHtml(item.title || '캠핑장 리뷰')}</span>
                     </div>
                     ${item.memo ? `<div class="media-memo-text">⏱ ${escapeHtml(item.memo)}</div>` : ''}
-                    <div class="media-author-text">by ${escapeHtml(item.user || '알 수 없음')}</div>
                 </div>
                 <button type="button" class="media-item-del-btn" onclick="deleteMediaLink('${item.id}')" title="삭제">삭제</button>
             `;
@@ -2605,14 +2785,13 @@
         if (!rawUrl) { showToast("URL 주소를 입력해주세요."); return; }
         if (!/^https?:\/\//i.test(rawUrl)) { showToast("http:// 또는 https:// 포함된 전체 주소를 넣어주세요."); return; }
 
-        const finalUrl = formatMediaUrlWithTimestamp(rawUrl, memo);
         const type = detectMediaType(rawUrl);
 
         try {
             mediaSubmitBtn.disabled = true;
             const newLinkRef = push(ref(db, `sites/${activeMediaSiteId}/mediaLinks`));
             await set(newLinkRef, {
-                url: finalUrl,
+                url: rawUrl,
                 title: title || (type === 'youtube' ? '유튜브 영상 리뷰' : '블로그 캠핑 후기'),
                 memo: memo,
                 type: type,
@@ -2640,6 +2819,42 @@
             showToast("삭제 실패");
         }
     };
+
+    // 첨부 1 상세보기 모달 내에 직관적으로 표시되는 리뷰 링크 빌더
+    function renderDetailModalMediaPills(linksObj) {
+        const container = document.getElementById('modal-media-pills-container');
+        container.innerHTML = '';
+        const items = Object.entries(linksObj || {}).map(([id, link]) => ({ id, ...link }));
+
+        if (items.length === 0) {
+            container.innerHTML = '<div style="font-size:10px; color:var(--text-sub); text-align:center; padding:4px;">등록된 영상/블로그 리뷰가 없습니다.</div>';
+            return;
+        }
+
+        items.forEach(item => {
+            const type = item.type || detectMediaType(item.url);
+            const typeLabel = type === 'youtube' ? '유튜브 바로 시청 📺' : (type === 'blog' ? '블로그 후기 ↗' : '웹 링크 ↗');
+            const typeClass = type;
+
+            const pill = document.createElement('div');
+            pill.className = 'modal-media-pill';
+            
+            if (type === 'youtube') {
+                pill.onclick = () => playYoutubeInApp(item.url, item.title, item.memo);
+            } else {
+                pill.onclick = () => window.open(item.url, '_blank');
+            }
+
+            pill.innerHTML = `
+                <div class="pill-info">
+                    <span class="pill-badge ${typeClass}">${type === 'youtube' ? 'YOUTUBE' : typeLabel}</span>
+                    <span class="pill-title">${escapeHtml(item.title || '리뷰 보기')}</span>
+                </div>
+                ${item.memo ? `<span class="pill-memo">⏱ ${escapeHtml(item.memo)}</span>` : ''}
+            `;
+            container.appendChild(pill);
+        });
+    }
 
     // 🌁 상세 모달 열기
     window.openDetailBridge = async (siteId) => {
@@ -2688,8 +2903,7 @@
         document.getElementById('modal-travel').textContent = `별양: 약 ${travel['별양'].time} (${travel['별양'].distance}km) / 망원: 약 ${travel['망원'].time} (${travel['망원'].distance}km)`;
         document.getElementById('modal-recommender').textContent = `${site.recommender || '알 수 없음'}`;
 
-        const mediaCount = Object.keys(site.mediaLinks || {}).length;
-        document.getElementById('modal-media-count-badge').textContent = `${mediaCount}개 등록 ↗`;
+        renderDetailModalMediaPills(site.mediaLinks || {});
 
         document.getElementById('modal-naver-btn').href = site.url || `https://map.naver.com/v5/search/${encodeURIComponent(site.campName)}`;
         document.getElementById('modal-kakao-btn').href = site.kakaoUrl || `https://map.kakao.com/link/search/${encodeURIComponent(site.campName)}`;
@@ -2832,7 +3046,7 @@
                             <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
                                 <span>♥</span> <span>${likeCount}</span>
                             </button>
-                            <button class="side-action-btn" onclick="event.stopPropagation(); openMediaModal('${site.id}')" title="유튜브/블로그 링크">
+                            <button class="side-action-btn" onclick="event.stopPropagation(); openMediaModal('${site.id}')" title="유튜브/블로그 링크 관리">
                                 <span>📺</span> <span>${mediaCount}</span>
                             </button>
                             <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
@@ -2880,7 +3094,7 @@
                                 <svg class="icon-svg" width="10" height="10" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                                 <span>${likeCount}</span>
                             </button>
-                            <button class="side-action-btn" onclick="event.stopPropagation(); openMediaModal('${site.id}')" title="유튜브/블로그 링크">
+                            <button class="side-action-btn" onclick="event.stopPropagation(); openMediaModal('${site.id}')" title="유튜브/블로그 링크 관리">
                                 <svg class="icon-svg" style="color:var(--youtube);" width="11" height="11" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
                                 <span>${mediaCount}</span>
                             </button>
@@ -2909,9 +3123,7 @@
                 renderMediaItems(sitesCache[activeMediaSiteId].mediaLinks || {});
             }
             if (activeDetailSiteId && sitesCache[activeDetailSiteId]) {
-                const mediaCount = Object.keys(sitesCache[activeDetailSiteId].mediaLinks || {}).length;
-                const badgeEl = document.getElementById('modal-media-count-badge');
-                if (badgeEl) badgeEl.textContent = `${mediaCount}개 등록 ↗`;
+                renderDetailModalMediaPills(sitesCache[activeDetailSiteId].mediaLinks || {});
             }
         });
     }
