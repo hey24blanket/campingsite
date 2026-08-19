@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>34343444444444444우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -14,15 +14,14 @@
             --bg-color: #374047;     /* 메인 배경: 슬레이트 다크 */
             --c-blue: #13619C;       /* 포인트 블루 */
             --c-camel: #9C7944;      /* 포인트 웜 카멜 */
-            --c-earth: #5C503F;      /* 어스 브라운 (보더/구분선) */
-            --c-charcoal: #33302C;   /* 딥 차콜 (패널/카드/컨테이너 배경) */
+            --c-earth: #5C503F;      /* 어스 브라운 */
+            --c-charcoal: #33302C;   /* 딥 차콜 */
 
-            /* 순수 검정/흰색을 배제한 소프트 톤 */
-            --card-surface: #2D343B; /* 카드 표면 톤 */
+            --card-surface: #2D343B; /* 카드 표면 */
             --input-bg: #262D33;     /* 입력창 배경 */
-            --text-main: #EDE6D9;    /* 메인 텍스트: 소프트 아이보리 */
-            --text-sub: #BAAF9F;     /* 보조 텍스트: 뮤트 베이지 */
-            --danger: #B5534A;       /* 삭제/경고 */
+            --text-main: #EDE6D9;    /* 메인 텍스트 */
+            --text-sub: #BAAF9F;     /* 보조 텍스트 */
+            --danger: #B5534A;
 
             --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -191,7 +190,7 @@
             white-space: nowrap;
         }
 
-        /* 사이드 패널 */
+        /* 좌측 사이드 패널 (숨김/확장 지원) */
         #sidebar-panel {
             position: absolute;
             top: 50px;
@@ -208,11 +207,37 @@
             box-shadow: 3px 3px 0 rgba(19, 23, 26, 0.45);
             overflow: hidden;
             pointer-events: auto;
-            transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         #sidebar-panel.expanded {
             width: 820px;
+        }
+
+        /* 탭 숨김 상태 */
+        #sidebar-panel.hidden-tab {
+            transform: translateX(calc(-100% - 30px));
+            pointer-events: none;
+        }
+
+        /* 탭 숨김 시 띄워주는 플로팅 복원 버튼 */
+        #floating-show-btn {
+            position: absolute;
+            top: 50px;
+            left: 12px;
+            z-index: 15;
+            background: var(--c-charcoal);
+            color: var(--c-camel);
+            border: 1.5px solid var(--c-camel);
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            box-shadow: 3px 3px 0 rgba(19, 23, 26, 0.4);
+            display: none;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
         }
 
         .sidebar-header {
@@ -239,7 +264,13 @@
             color: var(--text-main);
         }
 
-        .expand-toggle-btn {
+        .header-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .panel-btn {
             background: var(--input-bg);
             border: 1px solid var(--c-earth);
             color: var(--c-camel);
@@ -249,7 +280,7 @@
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 2px;
             cursor: pointer;
         }
 
@@ -359,7 +390,7 @@
             white-space: nowrap;
         }
 
-        /* 카드 리스트 컨테이너 */
+        /* 카드 목록 */
         .camp-list-container {
             flex: 1;
             overflow-y: auto;
@@ -380,7 +411,7 @@
             align-content: start;
         }
 
-        /* 다크톤 슬림 콤팩트 카드 */
+        /* 슬림 콤팩트 카드 (클릭 가능) */
         .camp-card {
             border: 1px solid var(--c-earth);
             background: var(--card-surface);
@@ -390,6 +421,12 @@
             flex-direction: column;
             box-shadow: 0 1px 3px rgba(19, 23, 26, 0.25);
             flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.1s ease, border-color 0.15s ease;
+        }
+        .camp-card:hover {
+            border-color: var(--c-camel);
+            transform: translateY(-1px);
         }
 
         .camp-card-header {
@@ -523,22 +560,216 @@
             border-radius: 3px;
         }
 
-        /* 핀 마커 */
+        /* 📍 끝이 뾰족한 맞춤형 지도 마커 핀 */
+        .custom-map-pin-wrap {
+            position: relative;
+            transform: translate(-50%, -100%);
+            padding-bottom: 6px;
+            cursor: pointer;
+        }
+
         .custom-map-pin {
             background: var(--c-charcoal);
             color: var(--text-main);
-            padding: 2px 4px;
+            padding: 3px 6px;
             border-radius: 4px;
             font-weight: 800;
-            font-size: 9.5px;
-            border: 1px solid var(--c-camel);
-            box-shadow: 0 2px 4px rgba(19, 23, 26, 0.5);
+            font-size: 10px;
+            border: 1.5px solid var(--c-camel);
+            box-shadow: 0 2px 5px rgba(19, 23, 26, 0.5);
             white-space: nowrap;
-            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            position: relative;
         }
-        .custom-map-pin:hover {
+
+        .custom-map-pin::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--c-camel);
+        }
+
+        .custom-map-pin::before {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid var(--c-charcoal);
+            z-index: 1;
+        }
+
+        .custom-map-pin-wrap:hover .custom-map-pin {
             background: var(--c-blue);
             border-color: var(--text-main);
+        }
+
+        .custom-map-pin-wrap:hover .custom-map-pin::after {
+            border-top-color: var(--text-main);
+        }
+
+        .custom-map-pin-wrap:hover .custom-map-pin::before {
+            border-top-color: var(--c-blue);
+        }
+
+        /* 🌁 UX 브릿지 상세정보 팝업 모달 */
+        #detail-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(19, 23, 26, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3500;
+            padding: 16px;
+        }
+
+        .detail-box {
+            width: 100%;
+            max-width: 440px;
+            background: var(--c-charcoal);
+            border: 1px solid var(--c-earth);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .detail-img-wrap {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #232A30;
+        }
+
+        .detail-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(35, 42, 48, 0.85);
+            color: var(--text-main);
+            border: 1px solid var(--c-earth);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .detail-body {
+            padding: 14px 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .detail-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-title {
+            font-size: 1.25em;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .detail-category {
+            font-size: 10px;
+            color: var(--c-camel);
+            background: var(--input-bg);
+            border: 1px solid var(--c-earth);
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .detail-info-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--card-surface);
+            border: 1px solid var(--c-earth);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+
+        .detail-info-item {
+            display: flex;
+            gap: 6px;
+            line-height: 1.4;
+        }
+
+        .detail-label {
+            color: var(--text-sub);
+            min-width: 68px;
+            font-weight: 700;
+        }
+
+        .detail-val {
+            color: var(--text-main);
+            flex: 1;
+            word-break: keep-all;
+        }
+
+        .detail-bridge-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .bridge-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            transition: 0.15s;
+        }
+
+        .bridge-naver {
+            background: #03C75A;
+            color: #fff;
+            border: 1px solid #02b350;
+        }
+
+        .bridge-kakao {
+            background: #FEE500;
+            color: #191919;
+            border: 1px solid #e0ca00;
         }
 
         /* 댓글 모달 */
@@ -642,7 +873,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* 📱 모바일 반응형 분기 */
+        /* 📱 모바일 반응형 */
         @media (max-width: 768px) {
             input, select, textarea {
                 font-size: 16px !important;
@@ -679,6 +910,16 @@
                 width: auto;
                 height: 72vh;
                 height: 72dvh;
+            }
+
+            #sidebar-panel.hidden-tab {
+                transform: translateY(calc(100% + 30px));
+            }
+
+            #floating-show-btn {
+                top: auto;
+                bottom: max(16px, env(safe-area-inset-bottom));
+                left: 12px;
             }
 
             #sidebar-panel.expanded .camp-list-container {
@@ -718,19 +959,29 @@
         <div class="top-user" id="current-user-display"></div>
     </div>
 
+    <!-- 숨김 해제 플로팅 버튼 -->
+    <button type="button" id="floating-show-btn">
+        <span>📋</span> <span>캠핑장 목록 열기</span>
+    </button>
+
     <div id="sidebar-panel">
         <div class="sidebar-header">
             <div class="sidebar-top-row">
                 <span class="sidebar-title">캠핑장 검색 및 핀 추가</span>
-                <button type="button" id="toggle-expand-btn" class="expand-toggle-btn">
-                    <span id="expand-btn-icon">⤢</span> <span id="expand-btn-text">넓게보기</span>
-                </button>
+                <div class="header-controls">
+                    <button type="button" id="toggle-expand-btn" class="panel-btn">
+                        <span id="expand-btn-icon">⤢</span> <span id="expand-btn-text">넓게</span>
+                    </button>
+                    <button type="button" id="toggle-hide-btn" class="panel-btn" title="탭 숨기기">
+                        <span>✕</span> <span>숨기기</span>
+                    </button>
+                </div>
             </div>
             <div class="search-row">
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)" autocomplete="off" autocorrect="off" />
                 <button type="button" id="search-btn">검색</button>
             </div>
-            <div style="font-size: 0.65em; color: var(--text-sub);">추천순 자동 정렬 (전경 사진 우선 선별)</div>
+            <div style="font-size: 0.65em; color: var(--text-sub);">추천순 자동 정렬 (카드 클릭 시 상세 브릿지)</div>
 
             <div id="search-results-box">
                 <div class="search-box-title">
@@ -741,6 +992,54 @@
             </div>
         </div>
         <div class="camp-list-container" id="camp-list"></div>
+    </div>
+</div>
+
+<!-- 🌁 UX 브릿지 상세정보 팝업 모달 -->
+<div id="detail-modal">
+    <div class="detail-box">
+        <div class="detail-img-wrap">
+            <img class="detail-img" id="modal-img" src="" alt="전경 사진" />
+            <button type="button" class="detail-close-btn" id="modal-close-btn">✕</button>
+        </div>
+        <div class="detail-body">
+            <div class="detail-header-row">
+                <div class="detail-title" id="modal-title"></div>
+                <div class="detail-category" id="modal-category">캠핑,야영장</div>
+            </div>
+            
+            <div class="detail-info-grid">
+                <div class="detail-info-item">
+                    <span class="detail-label">📍 도로명주소</span>
+                    <span class="detail-val" id="modal-road-addr">-</span>
+                </div>
+                <div class="detail-info-item">
+                    <span class="detail-label">🏷️ 지번주소</span>
+                    <span class="detail-val" id="modal-jibun-addr">-</span>
+                </div>
+                <div class="detail-info-item">
+                    <span class="detail-label">📞 전화번호</span>
+                    <span class="detail-val" id="modal-phone">-</span>
+                </div>
+                <div class="detail-info-item">
+                    <span class="detail-label">🚗 이동소요</span>
+                    <span class="detail-val" id="modal-travel">-</span>
+                </div>
+                <div class="detail-info-item">
+                    <span class="detail-label">👤 추천인</span>
+                    <span class="detail-val" id="modal-recommender">-</span>
+                </div>
+            </div>
+
+            <div class="detail-bridge-actions">
+                <a class="bridge-btn bridge-naver" id="modal-naver-btn" href="#" target="_blank">
+                    <span>네이버 지도로 열기 ↗</span>
+                </a>
+                <a class="bridge-btn bridge-kakao" id="modal-kakao-btn" href="#" target="_blank">
+                    <span>카카오맵으로 열기 ↗</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -770,9 +1069,10 @@
 
     let map = null;
     let markersMap = {};
+    let sitesCache = {};
 
     const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
-    const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=300&q=80";
+    const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80";
 
     const POINT_BYEOLYANG = { lat: 37.4292, lng: 126.9877, name: '별양' };
     const POINT_MANGWON = { lat: 37.5559, lng: 126.9015, name: '망원' };
@@ -828,17 +1128,29 @@
 
     restoreSavedLogin();
 
-    // 탭 확장 토글
+    // 사이드 패널 제어 (넓게보기 / 숨기기 / 열기)
     const sidebarPanel = document.getElementById('sidebar-panel');
     const toggleExpandBtn = document.getElementById('toggle-expand-btn');
     const expandBtnIcon = document.getElementById('expand-btn-icon');
     const expandBtnText = document.getElementById('expand-btn-text');
+    const toggleHideBtn = document.getElementById('toggle-hide-btn');
+    const floatingShowBtn = document.getElementById('floating-show-btn');
 
     toggleExpandBtn.addEventListener('click', () => {
         sidebarPanel.classList.toggle('expanded');
         const isExp = sidebarPanel.classList.contains('expanded');
         expandBtnIcon.textContent = isExp ? '⤡' : '⤢';
-        expandBtnText.textContent = isExp ? '원래대로' : '넓게보기';
+        expandBtnText.textContent = isExp ? '원래대로' : '넓게';
+    });
+
+    toggleHideBtn.addEventListener('click', () => {
+        sidebarPanel.classList.add('hidden-tab');
+        floatingShowBtn.style.display = 'flex';
+    });
+
+    floatingShowBtn.addEventListener('click', () => {
+        sidebarPanel.classList.remove('hidden-tab');
+        floatingShowBtn.style.display = 'none';
     });
 
     async function handleLogin() {
@@ -1051,7 +1363,8 @@
 
         items.slice(0, 5).forEach(item => {
             const placeName = item.place_name || item.name;
-            const addr = item.road_address_name || item.address_name || '';
+            const roadAddr = item.road_address_name || '';
+            const jibunAddr = item.address_name || '';
             const lat = parseFloat(item.y || item.lat);
             const lng = parseFloat(item.x || item.lng);
 
@@ -1060,12 +1373,12 @@
             div.innerHTML = `
                 <div class="res-info">
                     <div class="res-title">${escapeHtml(placeName)}</div>
-                    <div class="res-addr">📍 ${escapeHtml(addr)}</div>
+                    <div class="res-addr">📍 ${escapeHtml(roadAddr || jibunAddr)}</div>
                 </div>
                 <button type="button" class="add-pin-btn">📍 핀 추가</button>
             `;
             div.querySelector('.add-pin-btn').addEventListener('click', () => {
-                addPlaceToDatabase(placeName, addr, lat, lng);
+                addPlaceToDatabase(placeName, roadAddr, jibunAddr, item.phone || '', item.category_name || '', item.place_url || '', lat, lng);
             });
             resultsList.appendChild(div);
         });
@@ -1073,21 +1386,26 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 핀 추가 및 DB 저장
-    async function addPlaceToDatabase(name, address, lat, lng) {
+    // 핀 추가 및 DB 저장 (풍부한 정규화 메타데이터 포함)
+    async function addPlaceToDatabase(name, roadAddr, jibunAddr, phone, category, kakaoUrl, lat, lng) {
         try {
             showToast(`'${name}' 대표 사진 선별 중...`, 1500);
             
-            const realImg = await fetchPlaceImage(name, address);
+            const realImg = await fetchPlaceImage(name, roadAddr || jibunAddr);
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
             
             const newSiteRef = push(ref(db, 'sites'));
             await set(newSiteRef, {
                 campName: name,
-                address: address,
+                address: roadAddr || jibunAddr,
+                roadAddress: roadAddr,
+                jibunAddress: jibunAddr,
+                phone: phone,
+                category: category,
+                kakaoUrl: kakaoUrl,
+                url: naverSearchUrl,
                 lat: lat,
                 lng: lng,
-                url: naverSearchUrl,
                 img: realImg,
                 recommender: currentUser,
                 likes: {},
@@ -1108,12 +1426,51 @@
         }
     }
 
+    // 🌁 UX 브릿지 상세정보 팝업 모달 함수
+    const detailModal = document.getElementById('detail-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    modalCloseBtn.addEventListener('click', () => { detailModal.style.display = 'none'; });
+    detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.style.display = 'none'; });
+
+    window.openDetailBridge = (siteId) => {
+        const site = sitesCache[siteId];
+        if (!site) return;
+
+        const lat = site.lat || 37.5666;
+        const lng = site.lng || 126.9784;
+        const travel = calculateTravelInfo(lat, lng);
+        const thumbUrl = site.img || DEFAULT_THUMB;
+
+        document.getElementById('modal-img').src = thumbUrl;
+        document.getElementById('modal-title').textContent = `⛺ ${site.campName}`;
+        document.getElementById('modal-category').textContent = site.category || '캠핑,야영장';
+        document.getElementById('modal-road-addr').textContent = site.roadAddress || site.address || '-';
+        document.getElementById('modal-jibun-addr').textContent = site.jibunAddress || '-';
+        
+        const phoneEl = document.getElementById('modal-phone');
+        if (site.phone) {
+            phoneEl.innerHTML = `<a href="tel:${escapeHtml(site.phone)}" style="color:var(--c-camel); text-decoration:underline;">${escapeHtml(site.phone)}</a>`;
+        } else {
+            phoneEl.textContent = '정보 없음';
+        }
+
+        document.getElementById('modal-travel').textContent = `별양: 약 ${travel['별양'].time} (${travel['별양'].distance}km) / 망원: 약 ${travel['망원'].time} (${travel['망원'].distance}km)`;
+        document.getElementById('modal-recommender').textContent = `${site.recommender || '알 수 없음'}`;
+
+        document.getElementById('modal-naver-btn').href = site.url || `https://map.naver.com/v5/search/${encodeURIComponent(site.campName)}`;
+        document.getElementById('modal-kakao-btn').href = site.kakaoUrl || `https://map.kakao.com/link/search/${encodeURIComponent(site.campName)}`;
+
+        detailModal.style.display = 'flex';
+    };
+
     // 실시간 카드 렌더링
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
             const listContainer = document.getElementById('camp-list');
             listContainer.innerHTML = '';
             const data = snapshot.val() || {};
+            sitesCache = data;
 
             Object.values(markersMap).forEach(m => {
                 if (m.marker) m.marker.setMap(null);
@@ -1148,12 +1505,18 @@
                 const thumbUrl = site.img || DEFAULT_THUMB;
 
                 const position = new naver.maps.LatLng(lat, lng);
+                
+                // 꼬리표가 정확한 좌표를 가리키는 핀 생성
                 const marker = new naver.maps.Marker({
                     position: position,
                     map: map,
                     icon: {
-                        content: `<div class="custom-map-pin" onclick="panToCamp(${lat}, ${lng})">⛺ ${escapeHtml(site.campName)}</div>`,
-                        anchor: new naver.maps.Point(10, 10)
+                        content: `
+                            <div class="custom-map-pin-wrap" onclick="openDetailBridge('${site.id}')">
+                                <div class="custom-map-pin">⛺ ${escapeHtml(site.campName)}</div>
+                            </div>
+                        `,
+                        anchor: new naver.maps.Point(0, 0)
                     }
                 });
 
@@ -1161,15 +1524,19 @@
 
                 const card = document.createElement('div');
                 card.className = 'camp-card';
+                card.onclick = () => { 
+                    panToCamp(lat, lng);
+                    openDetailBridge(site.id); 
+                };
                 card.innerHTML = `
                     <div class="camp-card-header">
                         <span>⛺ ${escapeHtml(site.campName)}</span>
-                        <a href="${escapeHtml(site.url)}" target="_blank" style="color:var(--c-camel); font-size:8.5px; text-decoration:underline;">네이버 지도 🔗</a>
+                        <span style="color:var(--c-camel); font-size:8.5px;">상세보기 🔍</span>
                     </div>
                     <div class="camp-card-body">
                         <div class="thumb-wrap">
                             <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="캠핑장 사진" onerror="this.src='${DEFAULT_THUMB}'">
-                            <button class="thumb-edit-btn" onclick="editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
+                            <button class="thumb-edit-btn" onclick="event.stopPropagation(); editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
                         </div>
                         <div class="card-details">
                             <div class="address-text" title="${escapeHtml(site.address)}">📍 ${escapeHtml(site.address)}</div>
@@ -1180,9 +1547,9 @@
                             <div class="card-actions">
                                 <span class="card-author">by ${escapeHtml(site.recommender)}</span>
                                 <div style="display:flex; gap:3px; align-items:center;">
-                                    <button class="badge-btn" onclick="toggleComments(event, '${site.id}')">💬 ${totalCommentCount}</button>
-                                    <button class="badge-btn heart-btn ${liked}" onclick="toggleLike('${site.id}')">♥ ${likeCount}</button>
-                                    <button class="delete-btn" onclick="deleteCamp('${site.id}')">🗑️</button>
+                                    <button class="badge-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')">💬 ${totalCommentCount}</button>
+                                    <button class="badge-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')">♥ ${likeCount}</button>
+                                    <button class="delete-btn" onclick="event.stopPropagation(); deleteCamp('${site.id}')">🗑️</button>
                                 </div>
                             </div>
                         </div>
