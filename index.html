@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>11우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>23우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API (지도 렌더링용) -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -316,11 +316,11 @@
         .thumb-wrap {
             position: relative;
             width: 100%;
-            height: 150px;
+            height: 160px;
             border: 1px solid var(--line-color);
             border-radius: 6px;
             overflow: hidden;
-            background: #eee;
+            background: #222;
         }
 
         .thumb {
@@ -575,7 +575,7 @@
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)">
                 <button type="button" id="search-btn">검색</button>
             </div>
-            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (이름을 검색한 후 원하는 장소의 핀을 추가하세요)</div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (핀 추가 시 실제 사진과 정보가 자동 등록됩니다)</div>
 
             <!-- 실시간 검색 결과 임시 목록 창 -->
             <div id="search-results-box">
@@ -746,7 +746,29 @@
         return results;
     }
 
-    // 1단계: 카카오 장소 검색 (SDK + REST API 이중 처리)
+    // 카카오 이미지 검색 API를 통해 실제 캠핑장 사진 자동 추출
+    async function fetchPlaceImage(placeName) {
+        try {
+            const query = `${placeName} 캠핑장`;
+            const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=5&sort=accuracy`;
+            const response = await fetch(imgUrl, {
+                headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.documents && data.documents.length > 0) {
+                    // 고화질 원본 이미지 URL 반환 (없으면 썸네일)
+                    return data.documents[0].image_url || data.documents[0].thumbnail_url;
+                }
+            }
+        } catch (err) {
+            console.warn("이미지 자동 로드 실패, 기본 이미지 사용:", err);
+        }
+        return DEFAULT_THUMB;
+    }
+
+    // 1단계: 장소 검색 실행
     const searchInput = document.getElementById('camp-search-input');
     const searchBtn = document.getElementById('search-btn');
     const resultsBox = document.getElementById('search-results-box');
@@ -764,7 +786,6 @@
         searchBtn.innerText = "검색중...";
         searchBtn.disabled = true;
 
-        // 우선 카카오 JS SDK 시도
         if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
             const ps = new kakao.maps.services.Places();
             ps.keywordSearch(query, (data, status) => {
@@ -782,7 +803,6 @@
             return;
         }
 
-        // SDK 미로드 시 REST API로 즉시 폴백
         await fallbackRestSearch(query);
     }
 
@@ -797,12 +817,12 @@
                 const resData = await response.json();
                 renderSearchResults(resData.documents || []);
             } else {
-                showToast("도메인 미등록: 카카오 콘솔에 사이트 도메인을 저장해주세요.");
+                showToast("검색 오류: 카카오 설정을 확인해주세요.");
                 resultsBox.style.display = 'none';
             }
         } catch (err) {
             console.error(err);
-            showToast("검색 연결에 실패했습니다.");
+            showToast("검색 연결 실패");
             resultsBox.style.display = 'none';
         } finally {
             searchBtn.innerText = "검색";
@@ -842,10 +862,15 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 2단계: 사용자가 선택한 장소만 Firebase에 저장하고 네이버 지도에 핀 표시
+    // 2단계: 실제 캠핑장 사진을 자동 검색하여 Firebase에 저장
     async function addPlaceToDatabase(name, address, lat, lng) {
         try {
+            showToast(`'${name}' 사진과 정보를 불러오는 중...`, 2000);
+            
+            // 실제 사진 자동 추출
+            const realImg = await fetchPlaceImage(name);
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
+            
             const newSiteRef = push(ref(db, 'sites'));
             await set(newSiteRef, {
                 campName: name,
@@ -853,7 +878,7 @@
                 lat: lat,
                 lng: lng,
                 url: naverSearchUrl,
-                img: DEFAULT_THUMB,
+                img: realImg,
                 recommender: currentUser,
                 likes: {},
                 comments: {}
@@ -861,7 +886,7 @@
 
             searchInput.value = '';
             resultsBox.style.display = 'none';
-            showToast(`'${name}' 핀이 추가되었습니다!`);
+            showToast(`'${name}' 핀과 사진이 등록되었습니다!`);
 
             if (map) {
                 map.setCenter(new naver.maps.LatLng(lat, lng));
@@ -965,7 +990,7 @@
     };
 
     window.editCampThumb = (siteId, currentImg) => {
-        const newImg = prompt("카드로 쓸 사진 이미지 주소(URL)를 입력하세요:\n(네이버 지도 등에서 사진 우클릭 → '이미지 주소 복사')", currentImg !== DEFAULT_THUMB ? currentImg : "");
+        const newImg = prompt("카드로 쓸 사진 이미지 주소(URL)를 입력하세요:\n(사진 우클릭 → '이미지 주소 복사')", currentImg !== DEFAULT_THUMB ? currentImg : "");
         if (newImg === null) return;
         const trimmed = newImg.trim();
         if (!trimmed) return;
