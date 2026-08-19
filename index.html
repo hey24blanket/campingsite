@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>ㅁㅁ9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>ㄷㄷ9/11~9/13 2박 - 캠핑장 아카이브</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -22,7 +22,7 @@
             --input-bg: #21262B;     /* 입력창 배경 */
             --text-main: #EDE6D9;    /* 메인 텍스트 */
             --text-sub: #BAAF9F;     /* 보조 텍스트 */
-            --danger: #B5534A;       /* 삭제/경고 */
+            --danger: #B5534A;       /* 삭제/경고/알림 빨간색 */
 
             --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -232,23 +232,27 @@
             align-content: start;
         }
 
+        /* 📱 iOS 직관적 드래그 핸들 바 */
         .sheet-handle-bar {
             display: none;
             width: 100%;
-            padding: 10px 0 6px 0;
+            padding: 12px 0 8px 0;
             align-items: center;
             justify-content: center;
             cursor: grab;
-            touch-action: none;
+            touch-action: none !important;
+            user-select: none;
             background: var(--card-surface);
+            border-bottom: 1px solid rgba(92, 80, 63, 0.3);
         }
         .sheet-handle-bar:active { cursor: grabbing; }
 
         .sheet-handle-pill {
-            width: 40px;
-            height: 4px;
+            width: 42px;
+            height: 5px;
             background-color: var(--c-earth);
             border-radius: 999px;
+            pointer-events: none;
         }
 
         .sidebar-header {
@@ -559,6 +563,7 @@
         }
 
         .side-action-btn {
+            position: relative;
             background: var(--input-bg);
             border: 1px solid var(--c-earth);
             color: var(--text-main);
@@ -588,6 +593,34 @@
             padding: 2px 0;
             font-size: 8.5px;
             opacity: 0.8;
+        }
+
+        /* 🔴 안 읽은 새 댓글 빨간 배지 */
+        .unread-comment-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background-color: var(--danger);
+            color: #ffffff;
+            font-size: 8px;
+            font-weight: 900;
+            min-width: 14px;
+            height: 14px;
+            line-height: 12px;
+            padding: 0 3px;
+            border-radius: 7px;
+            border: 1.2px solid var(--card-surface);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-badge 1.8s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
         }
 
         /* 📍 끝이 뾰족한 맞춤형 지도 마커 핀 */
@@ -674,7 +707,7 @@
             max-height: 90vh;
         }
 
-        /* 📸 최대 15장 갤러리 슬라이더 영역 */
+        /* 📸 무한 루프 갤러리 슬라이더 영역 */
         .detail-slider-wrap {
             position: relative;
             width: 100%;
@@ -1050,6 +1083,7 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
+        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1086,7 +1120,7 @@
     </div>
 </div>
 
-<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (15장 갤러리 슬라이더 탑재) -->
+<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (무한 루프 15장 슬라이더 탑재) -->
 <div id="detail-modal">
     <div class="detail-box">
         <div class="detail-slider-wrap" id="detail-slider">
@@ -1243,10 +1277,12 @@
     let startY = 0;
     let startHeight = 0;
     let isDragging = false;
+    let isTouchMoved = false;
 
     sheetHandle.addEventListener('touchstart', (e) => {
         if (window.innerWidth > 768) return;
         isDragging = true;
+        isTouchMoved = false;
         startY = e.touches[0].clientY;
         startHeight = sidebarPanel.getBoundingClientRect().height;
         sidebarPanel.style.transition = 'none';
@@ -1256,7 +1292,8 @@
         if (!isDragging) return;
         const currentY = e.touches[0].clientY;
         const diff = startY - currentY;
-        const newHeight = Math.max(100, Math.min(window.innerHeight * 0.88, startHeight + diff));
+        if (Math.abs(diff) > 4) isTouchMoved = true;
+        const newHeight = Math.max(90, Math.min(window.innerHeight * 0.88, startHeight + diff));
         sidebarPanel.style.height = `${newHeight}px`;
     }, { passive: true });
 
@@ -1268,17 +1305,21 @@
         const currentH = sidebarPanel.getBoundingClientRect().height;
         const vh = window.innerHeight;
 
-        if (currentH < vh * 0.28) {
-            sidebarPanel.style.height = '105px';
-        } else if (currentH > vh * 0.65) {
-            sidebarPanel.style.height = '82dvh';
-        } else {
-            sidebarPanel.style.height = '48dvh';
+        // 드래그 제스처 스냅 (최소화 / 절반 / 전체)
+        if (isTouchMoved) {
+            if (currentH < vh * 0.28) {
+                sidebarPanel.style.height = '105px';
+            } else if (currentH > vh * 0.65) {
+                sidebarPanel.style.height = '82dvh';
+            } else {
+                sidebarPanel.style.height = '48dvh';
+            }
         }
     });
 
+    // 단순 탭(클릭) 시 순환 토글
     sheetHandle.addEventListener('click', () => {
-        if (window.innerWidth > 768) return;
+        if (window.innerWidth > 768 || isTouchMoved) return;
         const currentH = sidebarPanel.getBoundingClientRect().height;
         const vh = window.innerHeight;
         sidebarPanel.style.transition = 'height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -1374,12 +1415,11 @@
         return results;
     }
 
-    // 📸 15장 체계적 수집 알고리즘 (1: 전경/입구/지도 -> 2: 편의시설 -> 3: 사이트/데크)
+    // 📸 15장 체계적 수집 알고리즘
     async function fetchPlaceImages(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
 
-            // 1그룹: 전경 / 입구 / 안내도·배치도
             const group1Queries = [
                 `"${placeName}" 캠핑장 전경`,
                 `"${placeName}" 배치도`,
@@ -1388,7 +1428,6 @@
                 `"${placeName}" 전경`
             ];
 
-            // 2그룹: 편의시설 (화장실, 샤워실, 개수대, 매점)
             const group2Queries = [
                 `"${placeName}" 화장실`,
                 `"${placeName}" 샤워실`,
@@ -1396,7 +1435,6 @@
                 `"${placeName}" 매점`
             ];
 
-            // 3그룹: 사이트별 / 데크 / 텐트 피칭
             const group3Queries = [
                 `"${placeName}" 사이트`,
                 `"${placeName}" 데크`,
@@ -1438,14 +1476,10 @@
                 }
             };
 
-            // 1단계: 전경/입구/지도 4장
             appendUnique(g1Results, 4);
-            // 2단계: 편의시설 5장
             appendUnique(g2Results, 5);
-            // 3단계: 사이트/데크/피칭 (최대 15장까지 채움)
             appendUnique(g3Results, 15 - finalImages.length);
 
-            // 잔여 후보로 보충
             const remaining = [...g1Results, ...g3Results, ...g2Results];
             appendUnique(remaining, 15 - finalImages.length);
 
@@ -1552,7 +1586,7 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 핀 추가 및 DB 저장 (15장 갤러리 이미지 동시 저장)
+    // 핀 추가 및 DB 저장
     async function addPlaceToDatabase(name, roadAddr, jibunAddr, phone, category, kakaoUrl, lat, lng) {
         try {
             showToast(`'${name}' 갤러리 사진들을 수집 중...`, 1800);
@@ -1594,7 +1628,7 @@
         }
     }
 
-    // 🌁 15장 스와이프 갤러리 슬라이더 & UX 브릿지 모달
+    // 🌁 무한 루프(Infinite Loop) 갤러리 슬라이더 & UX 브릿지 모달
     const detailModal = document.getElementById('detail-modal');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const sliderTrack = document.getElementById('slider-track');
@@ -1611,27 +1645,24 @@
     function updateSliderPosition() {
         sliderTrack.style.transform = `translateX(-${currentSlideIdx * 100}%)`;
         slideCounter.textContent = `${currentSlideIdx + 1} / ${currentSlideCount}`;
-        sliderPrevBtn.style.opacity = currentSlideIdx === 0 ? '0.3' : '1';
-        sliderNextBtn.style.opacity = currentSlideIdx === currentSlideCount - 1 ? '0.3' : '1';
     }
 
+    // 🔄 무한 루프 네비게이션
     sliderPrevBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (currentSlideIdx > 0) {
-            currentSlideIdx--;
-            updateSliderPosition();
-        }
+        if (currentSlideCount <= 1) return;
+        currentSlideIdx = (currentSlideIdx - 1 + currentSlideCount) % currentSlideCount;
+        updateSliderPosition();
     });
 
     sliderNextBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (currentSlideIdx < currentSlideCount - 1) {
-            currentSlideIdx++;
-            updateSliderPosition();
-        }
+        if (currentSlideCount <= 1) return;
+        currentSlideIdx = (currentSlideIdx + 1) % currentSlideCount;
+        updateSliderPosition();
     });
 
-    // 터치 스와이프 제스처
+    // 🔄 무한 루프 터치 스와이프 제스처
     let sliderTouchStartX = 0;
     const sliderWrap = document.getElementById('detail-slider');
 
@@ -1643,11 +1674,13 @@
         const touchEndX = e.changedTouches[0].clientX;
         const diffX = sliderTouchStartX - touchEndX;
 
-        if (diffX > 40 && currentSlideIdx < currentSlideCount - 1) {
-            currentSlideIdx++;
+        if (currentSlideCount <= 1) return;
+
+        if (diffX > 35) { // 다음 사진 (루프)
+            currentSlideIdx = (currentSlideIdx + 1) % currentSlideCount;
             updateSliderPosition();
-        } else if (diffX < -40 && currentSlideIdx > 0) {
-            currentSlideIdx--;
+        } else if (diffX < -35) { // 이전 사진 (루프)
+            currentSlideIdx = (currentSlideIdx - 1 + currentSlideCount) % currentSlideCount;
             updateSliderPosition();
         }
     }, { passive: true });
@@ -1662,7 +1695,6 @@
 
         let imgList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
 
-        // 갤러리 슬라이드 빌드
         sliderTrack.innerHTML = '';
         currentSlideIdx = 0;
         currentSlideCount = imgList.length;
@@ -1699,7 +1731,6 @@
 
         detailModal.style.display = 'flex';
 
-        // 기존 단일 이미지 등록 항목일 경우 백그라운드에서 15장 자동 보충
         if (!site.images || site.images.length <= 1) {
             fetchPlaceImages(site.campName, site.address).then(newImgs => {
                 if (newImgs && newImgs.length > 1) {
@@ -1708,6 +1739,20 @@
             });
         }
     };
+
+    // 🔴 안 읽은 댓글 개수 계산 헬퍼
+    function getUnreadCommentCount(siteId, commentsObj) {
+        if (!commentsObj || Object.keys(commentsObj).length === 0) return 0;
+        const lastSeen = Number(localStorage.getItem(`lastSeen_${siteId}_${currentUser}`) || 0);
+        let unread = 0;
+        Object.values(commentsObj).forEach(c => {
+            if (c && c.user !== currentUser) {
+                const ts = c.timestamp || 0;
+                if (ts > lastSeen) unread++;
+            }
+        });
+        return unread;
+    }
 
     // 실시간 리스트 렌더링 및 정렬 처리
     function renderSitesList() {
@@ -1753,6 +1798,7 @@
 
             const commentsObj = site.comments || {};
             const totalCommentCount = Object.keys(commentsObj).length;
+            const unreadCount = getUnreadCommentCount(site.id, commentsObj);
 
             const lat = site.lat || 37.5666;
             const lng = site.lng || 126.9784;
@@ -1823,6 +1869,7 @@
                             <span>${likeCount}</span>
                         </button>
                         <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
+                            ${unreadCount > 0 ? `<div class="unread-comment-badge">${unreadCount}</div>` : ''}
                             <svg class="icon-svg" style="color:var(--text-sub);" width="11" height="11" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
                             <span>${totalCommentCount}</span>
                         </button>
@@ -1856,7 +1903,6 @@
         const trimmed = newImg.trim();
         if (!trimmed) return;
         
-        // 기존 갤러리 첫 번째 사진으로도 자동 편입
         const site = sitesCache[siteId] || {};
         const oldImages = site.images || [];
         const updatedImages = [trimmed, ...oldImages.filter(u => u !== trimmed)];
@@ -1905,6 +1951,10 @@
         activeChatSiteId = siteId;
         const siteRef = ref(db, `sites/${siteId}/comments`);
 
+        // 🔴 읽음 시점 갱신 (배지 즉시 제거)
+        localStorage.setItem(`lastSeen_${siteId}_${currentUser}`, Date.now());
+        renderSitesList();
+
         const chatWin = document.createElement('div');
         chatWin.className = 'chat-window';
         chatWin.innerHTML = `
@@ -1946,6 +1996,8 @@
                 listEl.appendChild(bubble);
             });
             listEl.scrollTop = listEl.scrollHeight;
+
+            localStorage.setItem(`lastSeen_${siteId}_${currentUser}`, Date.now());
         });
 
         const sendComment = async () => {
