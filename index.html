@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>456우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>4546우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services"></script>
     <style>
         :root {
-            /* 지정 팔레트 컬러 */
-            --c-blue: #13619C;      /* 포인트 블루 */
-            --c-camel: #9C7944;     /* 웜 카멜 (강조/좋아요) */
-            --c-earth: #5C503F;     /* 어스 브라운 (보더/보조선) */
-            --c-slate: #374047;     /* 슬레이트 다크 (헤더/핀) */
-            --c-charcoal: #33302C;  /* 딥 차콜 (메인 텍스트/카드 바) */
+            --c-blue: #13619C;
+            --c-camel: #9C7944;
+            --c-earth: #5C503F;
+            --c-slate: #374047;
+            --c-charcoal: #33302C;
 
             --bg-color: #F8F6F0;
             --card-bg: #FFFFFF;
@@ -24,14 +23,15 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--c-charcoal); 
-            font-family: var(--font-main); 
-            height: 100vh; 
+        
+        html, body {
+            width: 100%;
+            height: 100%;
             height: 100dvh;
-            overflow: hidden; 
-            position: relative;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--c-charcoal);
+            font-family: var(--font-main);
         }
 
         input, button {
@@ -142,7 +142,7 @@
 
         .floating-top {
             position: absolute;
-            top: 10px;
+            top: max(10px, env(safe-area-inset-top));
             left: 12px;
             right: 12px;
             z-index: 10;
@@ -179,13 +179,13 @@
             white-space: nowrap;
         }
 
-        /* 좌측 패널 (기본 너비 280px) */
+        /* 사이드 패널 (PC 기본: 좌측 플로팅) */
         #sidebar-panel {
             position: absolute;
-            top: 50px;
+            top: 52px;
             left: 12px;
             bottom: 12px;
-            width: 280px;
+            width: 275px;
             max-width: calc(100vw - 24px);
             background: var(--card-bg);
             border: 1px solid var(--c-earth);
@@ -196,10 +196,9 @@
             box-shadow: 3px 3px 0 rgba(51, 48, 44, 0.15);
             overflow: hidden;
             pointer-events: auto;
-            transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s ease;
         }
 
-        /* 확장 시 (PC 화면 그리드) */
         #sidebar-panel.expanded {
             width: 820px;
         }
@@ -250,7 +249,7 @@
 
         .search-row input {
             flex: 1;
-            font-size: 11.5px;
+            font-size: 12px;
             padding: 5px 7px;
             border-color: var(--c-earth);
         }
@@ -261,6 +260,7 @@
             border-color: var(--c-blue);
             padding: 5px 8px;
             font-size: 11px;
+            white-space: nowrap;
         }
 
         #search-results-box {
@@ -345,7 +345,7 @@
             white-space: nowrap;
         }
 
-        /* 카드 컨테이너 */
+        /* 카드 목록 */
         .camp-list-container {
             flex: 1;
             overflow-y: auto;
@@ -354,16 +354,18 @@
             flex-direction: column;
             gap: 6px;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            touch-action: pan-y;
         }
 
         #sidebar-panel.expanded .camp-list-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
             gap: 6px;
             align-content: start;
         }
 
-        /* 슬림 70% 가로형 콤팩트 카드 */
+        /* 70% 슬림 콤팩트 카드 */
         .camp-card {
             border: 1px solid var(--c-earth);
             background: #fff;
@@ -395,9 +397,9 @@
 
         .thumb-wrap {
             position: relative;
-            width: 58px;
-            height: 58px;
-            min-width: 58px;
+            width: 56px;
+            height: 56px;
+            min-width: 56px;
             border: 1px solid #E2DDD3;
             border-radius: 4px;
             overflow: hidden;
@@ -467,7 +469,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 65px;
+            max-width: 60px;
         }
 
         .badge-btn {
@@ -501,7 +503,7 @@
             border-radius: 3px;
         }
 
-        /* 핀 */
+        /* 핀 마커 */
         .custom-map-pin {
             background: var(--c-slate);
             color: #fff;
@@ -519,7 +521,7 @@
             border-color: #fff;
         }
 
-        /* 댓글 팝업 */
+        /* 댓글 모달 */
         .chat-window {
             position: absolute;
             z-index: 3000;
@@ -595,7 +597,7 @@
         #toast {
             position: fixed;
             left: 50%;
-            bottom: 16px;
+            bottom: max(16px, env(safe-area-inset-bottom));
             transform: translateX(-50%) translateY(8px);
             opacity: 0;
             pointer-events: none;
@@ -618,12 +620,16 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* 📱 모바일 완전 반응형 최적화 */
+        /* 📱 모바일 완전 반응형 분기 */
         @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important; /* iOS 자동 화면 줌 방지 필수 설정 */
+            }
+
             .floating-top {
-                top: 6px;
-                left: 6px;
-                right: 6px;
+                top: max(6px, env(safe-area-inset-top));
+                left: 8px;
+                right: 8px;
                 gap: 4px;
             }
             .top-brand {
@@ -634,28 +640,28 @@
                 font-size: 0.7em;
                 padding: 4px 6px;
             }
+
             #sidebar-panel {
                 top: auto;
-                left: 6px;
-                right: 6px;
-                bottom: 6px;
+                left: 8px;
+                right: 8px;
+                bottom: max(8px, env(safe-area-inset-bottom));
                 width: auto;
                 max-width: 100vw;
-                height: 40vh;
-                height: 40dvh;
+                height: 42vh;
+                height: 42dvh;
                 border-radius: 8px;
             }
+
             #sidebar-panel.expanded {
                 width: auto;
                 height: 72vh;
                 height: 72dvh;
             }
+
             #sidebar-panel.expanded .camp-list-container {
                 display: flex;
                 flex-direction: column;
-            }
-            .search-row input {
-                font-size: 14px; /* iOS 자동 줌 방지 */
             }
         }
     </style>
@@ -800,7 +806,7 @@
 
     restoreSavedLogin();
 
-    // 탭 확장/축소
+    // 탭 확장 토글
     const sidebarPanel = document.getElementById('sidebar-panel');
     const toggleExpandBtn = document.getElementById('toggle-expand-btn');
     const expandBtnIcon = document.getElementById('expand-btn-icon');
@@ -884,7 +890,7 @@
         return results;
     }
 
-    // 💡 대표성 점수 기반 스마트 이미지 선별 알고리즘 (후보군 15개 중 전경/야경 1위 선별)
+    // 💡 대표성 점수 기반 스마트 이미지 선별 알고리즘
     async function fetchPlaceImage(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
@@ -914,7 +920,6 @@
 
             if (candidates.length === 0) return DEFAULT_THUMB;
 
-            // 점수표 기반 최적 후보 산출
             let bestDoc = null;
             let highestScore = -999;
 
@@ -925,16 +930,14 @@
                 const docUrl = (doc.doc_url || '').toLowerCase();
                 const combined = `${url} ${siteName} ${docUrl}`;
 
-                // 1. 제외 대상 필터링 (화장실, 음식, 지도 등 감점)
                 if (/화장실|샤워실|개수대|toilet|restroom|washroom/.test(combined)) score -= 12;
                 if (/음식|고기|삼겹살|바베큐|bbq|라면|밀키트|메뉴|식당|먹방|안주/.test(combined)) score -= 8;
                 if (/배치도|지도|안내도|map|약도|위치도/.test(combined)) score -= 6;
                 if (/영수증|예약|가격표|요금|내부시설/.test(combined)) score -= 8;
 
-                // 2. 가산점 부여 (전경, 텐트, 뷰, 캠핑장 관련)
                 if (/전경|풍경|야경|뷰|사이트|데크|잔디|캠핑|텐트|오토캠핑/.test(combined)) score += 6;
                 if (combined.includes(placeName.toLowerCase())) score += 3;
-                if (doc.width && doc.height && doc.width > doc.height) score += 2; // 가로형 사진 선호
+                if (doc.width && doc.height && doc.width > doc.height) score += 2;
 
                 if (score > highestScore) {
                     highestScore = score;
@@ -943,7 +946,6 @@
             });
 
             if (bestDoc && highestScore > -10) {
-                // CDN 차단이 없는 안전한 thumbnail_url 우선 활용
                 return bestDoc.thumbnail_url || bestDoc.image_url;
             }
 
@@ -1084,7 +1086,7 @@
         }
     }
 
-    // 실시간 렌더링 (슬림 70% 가로형 콤팩트 카드)
+    // 실시간 카드 렌더링
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
             const listContainer = document.getElementById('camp-list');
@@ -1102,7 +1104,7 @@
             })).sort((a, b) => {
                 const aLikes = Object.keys(a.likes || {}).length;
                 const bLikes = Object.keys(b.likes || {}).length;
-                return bLikes - aLikes; // 추천순 자동 정렬
+                return bLikes - aLikes;
             });
 
             if (sitesArray.length === 0) {
