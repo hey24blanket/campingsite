@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>444우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -221,7 +221,6 @@
             transition: height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* iOS 드래그 핸들 바 */
         .sheet-handle-bar {
             display: none;
             width: 100%;
@@ -1053,7 +1052,7 @@
     let map = null;
     let markersMap = {};
     let sitesCache = {};
-    let currentSortMode = 'likes'; // 'likes' | 'byeolyang' | 'mangwon'
+    let currentSortMode = 'likes';
 
     const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
     const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
@@ -1136,7 +1135,7 @@
         sidebarPanel.style.height = `${newHeight}px`;
     }, { passive: true });
 
-    window.addEventListener('touchend', (e) => {
+    window.addEventListener('touchend', () => {
         if (!isDragging) return;
         isDragging = false;
         sidebarPanel.style.transition = 'height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -1144,7 +1143,6 @@
         const currentH = sidebarPanel.getBoundingClientRect().height;
         const vh = window.innerHeight;
 
-        // 드래그 위치에 따라 3단계 자동 스냅 (최소화 / 절반 / 전체)
         if (currentH < vh * 0.28) {
             sidebarPanel.style.height = '105px';
         } else if (currentH > vh * 0.65) {
@@ -1154,7 +1152,6 @@
         }
     });
 
-    // 짧은 탭(클릭) 시 순환 토글 (기본 -> 전체 -> 최소화)
     sheetHandle.addEventListener('click', () => {
         if (window.innerWidth > 768) return;
         const currentH = sidebarPanel.getBoundingClientRect().height;
@@ -1252,17 +1249,15 @@
         return results;
     }
 
-    // 💡 고화질 원본 + 시설 제외 점수 알고리즘
+    // 💡 오류 수정 완료: 전경 대표 사진 선별 함수
     async function fetchPlaceImage(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
             const searchQueries = [
-                `"${placeName}" 캠핑장 전경`,
-                `"${placeName}" 캠핑장 사이트`,
-                `"${placeName}" 캠핑장 야경`,
-                `"${placeName}" 캠핑장`,
-                `${placeName} ${cleanAddr} 캠핑장 전경`,
-                `${placeName} 캠핑`
+                `${placeName} 캠핑장 전경`,
+                `${placeName} 캠핑장 사이트`,
+                `${placeName} 캠핑장`,
+                `${placeName} ${cleanAddr} 캠핑장`
             ];
 
             const candidateMap = new Map();
@@ -1276,10 +1271,10 @@
             });
 
             const results = await Promise.all(fetchPromises);
-            results.flat().forEach(doc => {
-                const key = doc.image_url || doc.thumbnail_url;
+            results.flat().forEach(item => {
+                const key = item.thumbnail_url || item.image_url;
                 if (key && !candidateMap.has(key)) {
-                    candidateMap.set(key, doc);
+                    candidateMap.set(key, item);
                 }
             });
 
@@ -1290,10 +1285,11 @@
                 const url = (item.image_url || '').toLowerCase();
                 const thumb = (item.thumbnail_url || '').toLowerCase();
                 const siteName = (item.display_sitename || '').toLowerCase();
-                const docUrl = (doc.doc_url || '').toLowerCase();
+                const docUrl = (item.doc_url || '').toLowerCase();
                 let combined = `${url} ${thumb} ${siteName} ${docUrl}`;
                 try { combined = decodeURIComponent(combined); } catch (e) {}
 
+                // 화장실/샤워실/개수대/세면대 영구 감점
                 if (/(화장실|샤워실|개수대|세면대|변기|소변기|욕실|toilet|restroom|washroom|bathroom|shower|wash)/i.test(combined)) {
                     return -999;
                 }
@@ -1317,21 +1313,20 @@
                 return score;
             }
 
-            const scoredCandidates = candidates.map(doc => ({
-                doc,
-                score: scoreImage(doc)
+            const scoredCandidates = candidates.map(item => ({
+                item,
+                score: scoreImage(item)
             })).sort((a, b) => b.score - a.score);
 
             if (scoredCandidates.length > 0 && scoredCandidates[0].score > -100) {
-                const best = scoredCandidates[0].doc;
-                // 고화질 원본 우선 반환
-                return best.image_url || best.thumbnail_url;
+                const best = scoredCandidates[0].item;
+                return best.thumbnail_url || best.image_url;
             }
 
-            return candidates[0].image_url || candidates[0].thumbnail_url || DEFAULT_THUMB;
+            return candidates[0].thumbnail_url || candidates[0].image_url || DEFAULT_THUMB;
 
         } catch (err) {
-            console.warn("이미지 선별 예외:", err);
+            console.warn("이미지 선별 오류:", err);
             return DEFAULT_THUMB;
         }
     }
@@ -1534,7 +1529,6 @@
             return;
         }
 
-        // 정렬 모드 분기 (추천순 / 별양거리순 / 망원거리순)
         sitesArray.sort((a, b) => {
             if (currentSortMode === 'likes') {
                 const aLikes = Object.keys(a.likes || {}).length;
@@ -1613,11 +1607,11 @@
                         <div class="travel-info">
                             <div class="travel-item">
                                 <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                <span>별양 ${travel['별양'].time} (${travel['별양'].distance}km)</span>
+                                <span>별양 ${travel['별양'].time}</span>
                             </div>
                             <div class="travel-item">
                                 <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                <span>망원 ${travel['망원'].time} (${travel['망원'].distance}km)</span>
+                                <span>망원 ${travel['망원'].time}</span>
                             </div>
                         </div>
                         <div class="card-author">by ${escapeHtml(site.recommender)}</div>
