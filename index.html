@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <!-- 여기에 있는 YOUR_CLIENT_ID를 발급받으신 네이버 지도 Client ID로 교체하세요 -->
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=v5cjmgdweu"></script>
+    <style>
+        :root {
+            --bg-color: #FDFBF7;
+            --card-bg: #FFFFFF;
+            --line-color: #555555;
+            --accent: #FFB7B2;
+            --accent-green: #E2F0CB;
+            --danger: #FF6B6B;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-main); height: 100vh; overflow: hidden; }
+
+        input, button {
+            font-family: var(--font-main);
+            border: 1px solid var(--line-color);
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        button { cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:active { background: var(--line-color); color: var(--bg-color); }
+
+        /* 로그인 페이지 */
+        #login-page {
+            position: fixed;
+            inset: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border: 1px solid var(--line-color);
+            padding: 24px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+        }
+
+        .login-title {
+            font-size: 22px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: -6px;
+        }
+
+        .input-icon-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-icon-wrapper input {
+            width: 100%;
+            padding-right: 40px;
+        }
+
+        #toggle-pw-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none;
+        }
+
+        #toggle-pw-btn:active {
+            background: transparent;
+        }
+
+        /* 메인 페이지 레이아웃 (지도 풀스크린 + 플로팅 패널) */
+        #main-page {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        /* 상단 플로팅 바 & 좌측 사이드 패널 */
+        .floating-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .top-brand {
+            background: var(--card-bg);
+            border: 1px solid var(--line-color);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1.1em;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            pointer-events: auto;
+        }
+
+        .top-user {
+            background: var(--card-bg);
+            border: 1px solid var(--line-color);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            pointer-events: auto;
+        }
+
+        /* 좌측 캠핑장 검색 및 목록 패널 */
+        #sidebar-panel {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            bottom: 20px;
+            width: 380px;
+            background: var(--card-bg);
+            border: 1px solid var(--line-color);
+            border-radius: 12px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.15);
+            overflow: hidden;
+            pointer-events: auto;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--line-color);
+            background: #faf8f5;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .search-row input {
+            flex: 1;
+        }
+
+        .camp-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* 캠핑장 카드 스타일 (사이드바 내) */
+        .camp-card {
+            border: 1px solid var(--line-color);
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.1s;
+        }
+        .camp-card:hover {
+            border-color: #000;
+        }
+
+        .camp-card-header {
+            background: #000;
+            color: #fff;
+            padding: 8px 12px;
+            font-weight: 900;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .camp-card-body {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85em;
+        }
+
+        .travel-info {
+            background: #faf8f5;
+            border: 1px solid #e0def4;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            color: var(--text-sub);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
+        .badge-btn {
+            background: none;
+            border: 1px solid var(--line-color);
+            padding: 4px 8px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 6px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .heart-btn.active {
+            background: var(--accent);
+        }
+
+        .delete-btn {
+            background: none;
+            border: 1px solid var(--line-color);
+            color: var(--danger);
+            padding: 4px 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            border-radius: 6px;
+        }
+
+        /* 지도 위 커스텀 마커 레이블 스타일 */
+        .custom-map-pin {
+            background: #000;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 12px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .custom-map-pin:hover {
+            background: var(--danger);
+        }
+
+        /* 스마트 채팅창 스타일 (댓글 모드) */
+        .chat-window {
+            position: absolute;
+            z-index: 3000;
+            border: 1px solid var(--line-color);
+            border-radius: 10px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+            width: 280px;
+            height: 240px;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--bg-color);
+        }
+
+        .chat-bubble {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            color: #333;
+            max-width: 85%;
+            align-self: flex-start;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .chat-empty {
+            margin: auto;
+            padding: 12px;
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .chat-input-row {
+            display: flex;
+            height: 38px;
+            border-top: 1px solid var(--line-color);
+            background: #fff;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            padding: 0 10px;
+            outline: none;
+            font-size: 12px;
+            border-radius: 0;
+        }
+
+        .chat-send-btn {
+            width: 50px;
+            border: none;
+            background: var(--accent-green);
+            font-weight: bold;
+            font-size: 12px;
+            border-left: 1px solid var(--line-color);
+            border-radius: 0;
+            cursor: pointer;
+        }
+
+        /* 토스트 메시지 */
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%) translateY(12px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 4000;
+            min-width: 180px;
+            max-width: 80%;
+            padding: 12px 18px;
+            border: 1px solid var(--line-color);
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            text-align: center;
+            font-weight: 700;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 반응형 모바일 대응 */
+        @media (max-width: 768px) {
+            #sidebar-panel {
+                top: auto;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                height: 45vh;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 로그인 페이지 -->
+<div id="login-page">
+    <div class="login-box">
+        <img class="hero-image" src="https://raw.githubusercontent.com/hey24blanket/camping-menu/refs/heads/main/hero_00000.png" alt="캠핑 이미지" style="width:100%; height:140px; object-fit:cover; border-radius:6px; border:1px solid var(--line-color); display:block;" />
+        <h2 class="login-title">캠핑장 추천 목록</h2>
+        
+        <input type="text" id="userid" placeholder="아이디 (띄어쓰기 없는 한글)" />
+        <p class="hint">DB 확인 후 없으면 자동 가입됩니다.</p>
+        
+        <div class="input-icon-wrapper">
+            <input type="password" id="userpw" placeholder="비밀번호 (숫자 3자리)" inputmode="numeric" maxlength="3" />
+            <button type="button" id="toggle-pw-btn" aria-label="비밀번호 보기">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+        </div>
+        <button id="login-btn">들어가기</button>
+    </div>
+</div>
+
+<!-- 메인 페이지 -->
+<div id="main-page" style="display: none;">
+    <!-- 네이버 지도 컨테이너 -->
+    <div id="map"></div>
+
+    <!-- 플로팅 상단 바 -->
+    <div class="floating-top">
+        <div class="top-brand">🏕️ 우리들의 캠핑장 아카이브</div>
+        <div class="top-user" id="current-user-display"></div>
+    </div>
+
+    <!-- 좌측 검색 및 캠핑장 목록 패널 -->
+    <div id="sidebar-panel">
+        <div class="sidebar-header">
+            <h3 style="font-size: 0.95em;">캠핑장 검색 및 핀 추가</h3>
+            <div class="search-row">
+                <input type="text" id="camp-search-input" placeholder="캠핑장 이름 또는 주소 입력">
+                <button id="add-camp-btn">핀 추가</button>
+            </div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬[cite: 1]</div>
+        </div>
+        <div class="camp-list-container" id="camp-list"></div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue, update, remove, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC6n0Pw2GPg4MO6oUaWrBd7PT-GM-ufAw8",
+        authDomain: "monte-bianco-773a6.firebaseapp.com",
+        projectId: "monte-bianco-773a6",
+        storageBucket: "monte-bianco-773a6.firebasestorage.app",
+        messagingSenderId: "429437163337",
+        appId: "1:429437163337:web:f11e1a770ee03cb5336c98",
+        measurementId: "G-P4EP75DYB8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let toastTimer = null;
+    let activeChatWindow = null;
+    let activeChatSiteId = null;
+
+    let map = null;
+    let markersMap = {}; // siteId -> { marker, customOverlay }
+
+    // 기준점 좌표 (과천시청, 망원역 사거리)
+    const POINT_GWACHEON = { lat: 37.4292, lng: 126.9877, name: '과천' };
+    const POINT_MANGWON = { lat: 37.5559, lng: 126.9015, name: '망원' };
+
+    const SAVED_LOGIN_ID_KEY = 'campingSite.savedUserId';
+    const SAVED_LOGIN_PW_KEY = 'campingSite.savedUserPw';
+    const LAST_SEEN_PREFIX = 'campingSite.lastSeen_';
+
+    const idInput = document.getElementById('userid');
+    const pwInput = document.getElementById('userpw');
+    const loginBtn = document.getElementById('login-btn');
+    const togglePwBtn = document.getElementById('toggle-pw-btn');
+
+    function showToast(message, duration = 1600) {
+        const toast = document.getElementById('toast');
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.add('show');
+        toastTimer = setTimeout(() => { toast.classList.remove('show'); }, duration);
+    }
+
+    function restoreSavedLogin() {
+        try {
+            const savedId = localStorage.getItem(SAVED_LOGIN_ID_KEY);
+            const savedPw = localStorage.getItem(SAVED_LOGIN_PW_KEY);
+            if (!savedId || !savedPw) return;
+            idInput.value = savedId;
+            pwInput.value = savedPw;
+        } catch (error) {
+            console.warn('저장된 로그인 정보를 불러오지 못했습니다.', error);
+        }
+    }
+
+    function saveLogin(id, password) {
+        try {
+            localStorage.setItem(SAVED_LOGIN_ID_KEY, id);
+            localStorage.setItem(SAVED_LOGIN_PW_KEY, password);
+        } catch (error) {
+            console.warn('로그인 정보를 저장하지 못했습니다.', error);
+        }
+    }
+
+    pwInput.addEventListener('input', () => pwInput.value = pwInput.value.replace(/\D/g, '').slice(0, 3));
+    
+    const eyeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const eyeOffSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+    togglePwBtn.addEventListener('click', () => { 
+        pwInput.type = pwInput.type === 'password' ? 'text' : 'password'; 
+        togglePwBtn.innerHTML = pwInput.type === 'password' ? eyeSvg : eyeOffSvg; 
+    });
+
+    loginBtn.addEventListener('click', handleLogin);
+    pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+
+    restoreSavedLogin();
+
+    async function handleLogin() {
+        const idVal = idInput.value.trim();
+        const pwVal = pwInput.value.trim();
+
+        if (!/^[가-힣]+$/.test(idVal)) { showToast("아이디는 한글만 가능합니다."); return; }
+        if (!/^\d{3}$/.test(pwVal)) { showToast("비밀번호는 숫자 3자리입니다."); return; }
+        
+        try {
+            const userRef = ref(db, `users/${idVal}`);
+            const snapshot = await get(userRef);
+            let toastMessage = '';
+
+            if(!snapshot.exists()) {
+                await set(userRef, { password: pwVal });
+                toastMessage = "새로운 사람.";
+            } else {
+                if(snapshot.val().password !== pwVal) { 
+                    showToast("비밀번호가 틀렸습니다."); 
+                    return; 
+                }
+                toastMessage = "다시 로그인 함.";
+            }
+            
+            saveLogin(idVal, pwVal);
+            currentUser = idVal;
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-page').style.display = 'flex';
+            document.getElementById('current-user-display').innerText = `로그인: ${currentUser}님`;
+            showToast(toastMessage, 1800);
+
+            // 로그인 후 지도 초기화
+            initNaverMap();
+        } catch (e) {
+            showToast("로그인 오류 발생");
+            console.error(e);
+        }
+    }
+
+    function initNaverMap() {
+        if (map) return;
+        // 수도권 중심 좌표 (서울 시청 부근)
+        const mapOptions = {
+            center: new naver.maps.LatLng(37.5666, 126.9784),
+            zoom: 10
+        };
+        map = new naver.maps.Map('map', mapOptions);
+
+        // 지도 로드 후 데이터 연동 리스너 실행
+        setupFirebaseListener();
+    }
+
+    // 거리 계산 함수 (Haversine Formula) 및 소요 시간 추정
+    function calculateTravelInfo(lat, lng) {
+        const results = {};
+        [POINT_GWACHEON, POINT_MANGWON].forEach(pt => {
+            const R = 6371; // 지구 반지름 (km)
+            const dLat = (lat - pt.lat) * Math.PI / 180;
+            const dLon = (lng - pt.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(pt.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distKm = R * c;
+            
+            // 수도권 평균 차량 이동 속도 (약 40km/h 가정 + 정체 고려) 계산
+            const speedKmh = 40;
+            const timeHours = distKm / speedKmh;
+            const totalMins = Math.round(timeHours * 60);
+
+            results[pt.name] = {
+                distance: distKm.toFixed(1),
+                time: totalMins < 60 ? `${totalMins}분` : `${Math.floor(totalMins/60)}시간 ${totalMins%60}분`
+            };
+        });
+        return results;
+    }
+
+    // 캠핑장 검색 및 핀 추가 (네이버 Geocoder 활용 또는 수도권 내 자동 분산 배치)
+    document.getElementById('add-camp-btn').addEventListener('click', () => {
+        const query = document.getElementById('camp-search-input').value.trim();
+        if (!query) { showToast("캠핑장 이름이나 주소를 입력해주세요."); return; }
+
+        if (typeof naver === 'undefined' || !naver.maps.Service) {
+            addCampToDatabase(query, 37.5 + Math.random()*0.3, 126.8 + Math.random()*0.4);
+            return;
+        }
+
+        naver.maps.Service.geocode({ query: query }, function(status, response) {
+            if (status === naver.maps.Service.Status.ERROR || response.v2.meta.totalCount === 0) {
+                addCampToDatabase(query, 37.5 + Math.random()*0.3, 126.8 + Math.random()*0.4);
+                return;
+            }
+            const item = response.v2.addresses[0];
+            addCampToDatabase(query, parseFloat(item.y), parseFloat(item.x));
+        });
+    });
+
+    async function addCampToDatabase(campName, lat, lng) {
+        try {
+            const newSiteRef = push(ref(db, 'sites'));
+            const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(campName)}`;
+
+            await set(newSiteRef, {
+                campName: campName,
+                lat: lat,
+                lng: lng,
+                url: naverSearchUrl,
+                recommender: currentUser,
+                likes: {},
+                comments: {}
+            });
+
+            document.getElementById('camp-search-input').value = '';
+            showToast("캠핑장 핀이 추가되었습니다.");
+        } catch (e) {
+            showToast("추가 실패");
+            console.error(e);
+        }
+    }
+
+    // Firebase 데이터 연동 및 추천순 정렬[cite: 1]
+    function setupFirebaseListener() {
+        onValue(ref(db, 'sites'), (snapshot) => {
+            const listContainer = document.getElementById('camp-list');
+            listContainer.innerHTML = '';
+            const data = snapshot.val() || {};
+
+            // 기존 마커 정리
+            Object.values(markersMap).forEach(m => {
+                if (m.marker) m.marker.setMap(null);
+                if (m.customOverlay) m.customOverlay.setMap(null);
+            });
+            markersMap = {};
+
+            const sitesArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            })).sort((a, b) => {
+                const aLikes = Object.keys(a.likes || {}).length;
+                const bLikes = Object.keys(b.likes || {}).length;
+                return bLikes - aLikes; // 추천순 자동 정렬[cite: 1]
+            });
+
+            if (sitesArray.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; color:#666; padding:20px; font-size:13px;">등록된 캠핑장이 없습니다.</div>';
+                return;
+            }
+
+            sitesArray.forEach(site => {
+                const likes = site.likes || {};
+                const liked = likes[currentUser] ? 'active' : '';
+                const likeCount = Object.keys(likes).length;
+
+                const commentsObj = site.comments || {};
+                const totalCommentCount = Object.keys(commentsObj).length;
+
+                const lat = site.lat || 37.5666;
+                const lng = site.lng || 126.9784;
+                const travel = calculateTravelInfo(lat, lng);
+
+                // 지도 위에 항상 캠핑장 이름이 보이는 커스텀 마커(Overlay) 생성
+                const position = new naver.maps.LatLng(lat, lng);
+                const marker = new naver.maps.Marker({
+                    position: position,
+                    map: map
+                });
+
+                const contentString = `<div class="custom-map-pin" onclick="panToCamp(${lat}, ${lng})">⛺ ${escapeHtml(site.campName)}</div>`;
+                const customOverlay = new naver.maps.CustomOverlay({
+                    position: position,
+                    content: contentString,
+                    parent: map.getPanes().markerLayer,
+                    zIndex: 150
+                });
+                customOverlay.setMap(map);
+
+                markersMap[site.id] = { marker, customOverlay };
+
+                // 사이드바 카드 렌더링
+                const card = document.createElement('div');
+                card.className = 'camp-card';
+                card.innerHTML = `
+                    <div class="camp-card-header">
+                        <span>${escapeHtml(site.campName)}</span>
+                        <a href="${escapeHtml(site.url)}" target="_blank" style="color:#FFB7B2; font-size:11px; text-decoration:underline;">네이버 지도 🔗</a>
+                    </div>
+                    <div class="camp-card-body">
+                        <div class="travel-info">
+                            <div>🚗 <b>과천출발:</b> 약 ${travel['과천'].time} (${travel['과천'].distance}km)</div>
+                            <div>🚗 <b>망원출발:</b> 약 ${travel['망원'].time} (${travel['망원'].distance}km)</div>
+                        </div>
+                        <div style="font-size: 0.8em; color: var(--text-sub);">추천인: ${escapeHtml(site.recommender)}</div>
+                        <div class="card-actions">
+                            <button class="delete-btn" onclick="deleteCamp('${site.id}')">삭제</button>
+                            <div style="display:flex; gap:6px;">
+                                <button class="badge-btn" onclick="toggleComments(event, '${site.id}')">💬 ${totalCommentCount}</button>
+                                <button class="badge-btn heart-btn ${liked}" onclick="toggleLike('${site.id}')">♥ ${likeCount}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        });
+    }
+
+    window.panToCamp = (lat, lng) => {
+        if (map) {
+            map.setCenter(new naver.maps.LatLng(lat, lng));
+            map.setZoom(13);
+        }
+    };
+
+    window.escapeHtml = function(str) {
+        return String(str || '').replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    window.toggleLike = (siteId) => {
+        const userLikeRef = ref(db, `sites/${siteId}/likes/${currentUser}`);
+        get(userLikeRef).then(snap => {
+            const isLiked = snap.exists();
+            update(ref(db, `sites/${siteId}/likes`), { [currentUser]: isLiked ? null : true });
+        });
+    };
+
+    window.deleteCamp = (siteId) => {
+        if (confirm("정말 이 캠핑장을 삭제하시겠습니까?")) {
+            remove(ref(db, `sites/${siteId}`)).catch(err => alert("삭제 실패: " + err.message));
+        }
+    };
+
+    window.toggleComments = (event, siteId) => {
+        event.stopPropagation();
+        if (activeChatWindow && activeChatSiteId === siteId) {
+            closeChatWindow();
+            return;
+        }
+        if (activeChatWindow) closeChatWindow();
+        openChatWindow(event.currentTarget, siteId);
+    };
+
+    function openChatWindow(targetBtn, siteId) {
+        activeChatSiteId = siteId;
+        const siteRef = ref(db, `sites/${siteId}/comments`);
+
+        const chatWin = document.createElement('div');
+        chatWin.className = 'chat-window';
+        chatWin.innerHTML = `
+            <div class="chat-list" id="chat-list-${siteId}"></div>
+            <div class="chat-input-row">
+                <input type="text" class="chat-input" placeholder="댓글 입력..." />
+                <button type="button" class="chat-send-btn">전송</button>
+            </div>
+        `;
+
+        document.body.appendChild(chatWin);
+        activeChatWindow = chatWin;
+
+        const rect = targetBtn.getBoundingClientRect();
+        chatWin.style.left = Math.min(window.innerWidth - 290, Math.max(10, rect.left)) + 'px';
+        chatWin.style.top = (rect.bottom + 8 + window.scrollY > window.innerHeight ? rect.top - 248 + window.scrollY : rect.bottom + 8 + window.scrollY) + 'px';
+
+        const listEl = chatWin.querySelector('.chat-list');
+        const inputEl = chatWin.querySelector('.chat-input');
+        const sendBtn = chatWin.querySelector('.chat-send-btn');
+
+        onValue(siteRef, (snap) => {
+            const val = snap.val() || {};
+            listEl.innerHTML = '';
+            const items = Object.entries(val).map(([id, comment]) => {
+                if (typeof comment === 'string') return { text: comment };
+                return comment;
+            });
+
+            if (items.length === 0) {
+                listEl.innerHTML = '<div class="chat-empty">아직 댓글이 없습니다.</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const bubble = document.createElement('div');
+                bubble.className = 'chat-bubble';
+                bubble.textContent = `${item.user ? '[' + item.user + '] ' : ''}${item.text}`;
+                listEl.appendChild(bubble);
+            });
+            listEl.scrollTop = listEl.scrollHeight;
+        });
+
+        const sendComment = async () => {
+            const text = inputEl.value.trim();
+            if (!text) return;
+            sendBtn.disabled = true;
+            try {
+                await push(siteRef, {
+                    text: text,
+                    user: currentUser,
+                    timestamp: Date.now()
+                });
+                inputEl.value = '';
+                inputEl.focus();
+            } catch (e) {
+                showToast("댓글 전송 실패");
+            } finally {
+                sendBtn.disabled = false;
+            }
+        };
+
+        sendBtn.addEventListener('click', sendComment);
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.isComposing) {
+                e.preventDefault();
+                sendComment();
+            }
+        });
+    }
+
+    function closeChatWindow() {
+        if (activeChatWindow) {
+            activeChatWindow.remove();
+            activeChatWindow = null;
+            activeChatSiteId = null;
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!activeChatWindow) return;
+        if (e.target.closest('.chat-window') || e.target.closest('.badge-btn')) return;
+        closeChatWindow();
+    });
+</script>
+</body>
+</html>
