@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>666 9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>tt 9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -158,7 +158,7 @@
             background-color: var(--bg-color);
         }
 
-        /* 🗺️ 네이버 지도 다크 톤 필터 (배경 지도 타일만 다크 변환, 핀 마커는 영향 없음) */
+        /* 🗺️ 네이버 지도 다크 톤 필터 */
         #map {
             width: 100%;
             height: 100%;
@@ -325,6 +325,7 @@
             white-space: nowrap;
         }
 
+        /* 🎛️ 정렬 필터 + 리스트/카드 모드 바 */
         .filter-controls-row {
             display: flex;
             gap: 4px;
@@ -1217,6 +1218,7 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
+        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1234,7 +1236,7 @@
                 <button type="button" id="search-btn">검색</button>
             </div>
 
-            <!-- 필터 + 리스트/카드 모드 바 -->
+            <!-- 🎛️ 필터 + 리스트/카드 모드 바 -->
             <div class="filter-controls-row">
                 <div class="sort-filter-bar">
                     <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
@@ -1258,7 +1260,7 @@
     </div>
 </div>
 
-<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (대표사진 지정 버튼 탑재) -->
+<!-- 🌁 UX 브릿지 상세정보 팝업 모달 -->
 <div id="detail-modal">
     <div class="detail-box">
         <div class="detail-slider-wrap" id="detail-slider">
@@ -1346,7 +1348,6 @@
     let currentSortMode = 'likes';
     let isCompactList = false;
 
-    // 현재 열려있는 상세 모달의 정보 추적
     let activeDetailSiteId = null;
     let currentModalImgList = [];
     let currentSlideIdx = 0;
@@ -1660,7 +1661,7 @@
         }
     }
 
-    // 장소 검색
+    // 💡 스마트 4단계 연쇄 검색 엔진 (형태소/띄어쓰기 불일치 완벽 해결)
     const searchInput = document.getElementById('camp-search-input');
     const searchBtn = document.getElementById('search-btn');
     const resultsBox = document.getElementById('search-results-box');
@@ -1671,54 +1672,74 @@
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
     closeSearchBtn.addEventListener('click', () => { resultsBox.style.display = 'none'; });
 
+    async function searchKakaoPlaces(keyword) {
+        return new Promise((resolve) => {
+            if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
+                const ps = new kakao.maps.services.Places();
+                ps.keywordSearch(keyword, (data, status) => {
+                    if (status === kakao.maps.services.Status.OK && data && data.length > 0) {
+                        resolve(data);
+                    } else {
+                        resolve(null);
+                    }
+                });
+            } else {
+                resolve(null);
+            }
+        });
+    }
+
+    async function searchKakaoRest(keyword) {
+        try {
+            const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(keyword)}`;
+            const response = await fetch(restUrl, { headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` } });
+            if (response.ok) {
+                const resData = await response.json();
+                if (resData.documents && resData.documents.length > 0) return resData.documents;
+            }
+        } catch (e) {}
+        return null;
+    }
+
     async function performSearch() {
-        const query = searchInput.value.trim();
-        if (!query) { showToast("캠핑장 이름을 입력해주세요."); return; }
+        const rawQuery = searchInput.value.trim();
+        if (!rawQuery) { showToast("캠핑장 이름을 입력해주세요."); return; }
 
         searchBtn.innerText = "검색중..";
         searchBtn.disabled = true;
 
-        if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
-            const ps = new kakao.maps.services.Places();
-            ps.keywordSearch(query, (data, status) => {
-                searchBtn.innerText = "검색";
-                searchBtn.disabled = false;
-                if (status === kakao.maps.services.Status.OK) {
-                    renderSearchResults(data);
-                } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-                    showToast("검색 결과가 없습니다.");
-                    resultsBox.style.display = 'none';
-                } else {
-                    fallbackRestSearch(query);
-                }
-            });
-            return;
+        // 검색어 지능형 정규화 후보군 생성
+        const cleanQuery = rawQuery.replace(/(캠핑장|야영장|오토캠핑장|글램핑|캠핑)$/g, '').trim();
+        const noSpaceQuery = rawQuery.replace(/\s+/g, '');
+        const cleanNoSpaceQuery = cleanQuery.replace(/\s+/g, '');
+
+        const queryVariations = [
+            rawQuery,
+            cleanQuery,
+            noSpaceQuery,
+            cleanNoSpaceQuery
+        ].filter((q, idx, arr) => q && arr.indexOf(q) === idx);
+
+        let foundItems = null;
+
+        for (const q of queryVariations) {
+            foundItems = await searchKakaoPlaces(q);
+            if (!foundItems) {
+                foundItems = await searchKakaoRest(q);
+            }
+            if (foundItems && foundItems.length > 0) {
+                break;
+            }
         }
 
-        await fallbackRestSearch(query);
-    }
+        searchBtn.innerText = "검색";
+        searchBtn.disabled = false;
 
-    async function fallbackRestSearch(query) {
-        try {
-            const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`;
-            const response = await fetch(restUrl, {
-                headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
-            });
-
-            if (response.ok) {
-                const resData = await response.json();
-                renderSearchResults(resData.documents || []);
-            } else {
-                showToast("검색 오류가 발생했습니다.");
-                resultsBox.style.display = 'none';
-            }
-        } catch (err) {
-            console.error(err);
-            showToast("검색 연결 실패");
+        if (foundItems && foundItems.length > 0) {
+            renderSearchResults(foundItems);
+        } else {
+            showToast("검색 결과가 없습니다.");
             resultsBox.style.display = 'none';
-        } finally {
-            searchBtn.innerText = "검색";
-            searchBtn.disabled = false;
         }
     }
 
@@ -1815,7 +1836,6 @@
         sliderTrack.style.transform = `translateX(-${currentSlideIdx * 100}%)`;
         slideCounter.textContent = `${currentSlideIdx + 1} / ${currentSlideCount}`;
 
-        // 현재 보고 있는 사진이 해당 캠핑장의 대표사진인지 검사하여 버튼 스타일 동기화
         if (activeDetailSiteId && sitesCache[activeDetailSiteId]) {
             const currentImgUrl = currentModalImgList[currentSlideIdx];
             const currentRepImg = sitesCache[activeDetailSiteId].img;
@@ -1832,7 +1852,6 @@
         }
     }
 
-    // ⭐ 대표 사진 지정 클릭 이벤트
     setRepImgBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!activeDetailSiteId || !currentModalImgList.length) return;
@@ -1851,7 +1870,6 @@
         }
     });
 
-    // 🔄 무한 루프 슬라이더 이동
     sliderPrevBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (currentSlideCount <= 1) return;
@@ -1866,7 +1884,6 @@
         updateSliderPosition();
     });
 
-    // 🔄 무한 루프 터치 스와이프 제스처
     let sliderTouchStartX = 0;
     const sliderWrap = document.getElementById('detail-slider');
 
