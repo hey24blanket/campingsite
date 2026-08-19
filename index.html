@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>444우리들의 캠핑장 아카이브 - 지도 에디션</title>
-    <!-- 네이버 지도 API (화면 지도 렌더링용) -->
+    <title>555우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <!-- 네이버 지도 API (지도 렌더링용) -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
-    <!-- 카카오 SDK (검색 백업용) -->
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services&autoload=false"></script>
+    <!-- 카카오 장소 검색 API (초고속 키워드 검색 엔진) -->
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a085e86caab74f58d6778d77eeb99870&libraries=services"></script>
     <style>
         :root {
             --bg-color: #FDFBF7;
@@ -194,36 +194,49 @@
             flex: 1;
         }
 
-        /* 실시간 검색 결과 드롭다운 창 */
+        /* 실시간 검색 결과 임시 카드 컨테이너 */
         #search-results-box {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 12px;
-            right: 12px;
-            background: #fff;
-            border: 1px solid var(--line-color);
-            border-radius: 8px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-            max-height: 320px;
-            overflow-y: auto;
-            z-index: 100;
             display: none;
             flex-direction: column;
+            gap: 8px;
+            background: #fffdf9;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 6px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .search-box-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #d9534f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ffe0dd;
+            padding-bottom: 4px;
+        }
+
+        .close-res-btn {
+            background: none;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 0;
+            color: #888;
         }
 
         .search-result-item {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
+            background: #fff;
+            border: 1px solid #e0deda;
+            border-radius: 6px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 8px;
-        }
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-        .search-result-item:hover {
-            background: #fdfaf3;
         }
 
         .res-info {
@@ -562,10 +575,16 @@
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)">
                 <button type="button" id="search-btn">검색</button>
             </div>
-            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (이름만 검색하면 후보 목록이 즉시 뜹니다)</div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (이름을 검색한 후 원하는 장소의 핀을 추가하세요)</div>
 
-            <!-- 실시간 검색 결과 목록 드롭다운 -->
-            <div id="search-results-box"></div>
+            <!-- 실시간 검색 결과 임시 목록 창 -->
+            <div id="search-results-box">
+                <div class="search-box-title">
+                    <span>🔍 검색 결과 선택</span>
+                    <button type="button" class="close-res-btn" id="close-search-btn">✕ 닫기</button>
+                </div>
+                <div id="search-results-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
         </div>
         <div class="camp-list-container" id="camp-list"></div>
     </div>
@@ -597,9 +616,7 @@
 
     let map = null;
     let markersMap = {};
-    let kakaoPlaces = null;
 
-    const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
     const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
 
     const POINT_GWACHEON = { lat: 37.4292, lng: 126.9877, name: '과천' };
@@ -656,15 +673,6 @@
     pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
 
     restoreSavedLogin();
-
-    // 카카오 SDK 로더 초기화
-    if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.load) {
-        kakao.maps.load(() => {
-            if (kakao.maps.services) {
-                kakaoPlaces = new kakao.maps.services.Places();
-            }
-        });
-    }
 
     async function handleLogin() {
         const idVal = idInput.value.trim();
@@ -737,91 +745,70 @@
         return results;
     }
 
-    // 초고속 카카오 장소 검색 (직접 통신 + SDK 이중 지원)
+    // 1단계: 카카오 Places API로 검색 결과 목록 추출 (임시 상태)
     const searchInput = document.getElementById('camp-search-input');
     const searchBtn = document.getElementById('search-btn');
     const resultsBox = document.getElementById('search-results-box');
+    const resultsList = document.getElementById('search-results-list');
+    const closeSearchBtn = document.getElementById('close-search-btn');
 
     searchBtn.addEventListener('click', performSearch);
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
+    closeSearchBtn.addEventListener('click', () => { resultsBox.style.display = 'none'; });
 
-    async function performSearch() {
+    function performSearch() {
         const query = searchInput.value.trim();
         if (!query) { showToast("캠핑장 이름을 입력해주세요."); return; }
 
-        searchBtn.innerText = "검색중..";
-        searchBtn.disabled = true;
-
-        try {
-            // 1. 카카오 REST API로 초고속 직접 검색
-            const restUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`;
-            const response = await fetch(restUrl, {
-                headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
-            });
-
-            if (response.ok) {
-                const resData = await response.json();
-                renderSearchResults(resData.documents || []);
-                return;
-            }
-
-            // 2. REST API 차단 시 카카오 SDK로 자동 재시도
-            if (kakaoPlaces) {
-                kakaoPlaces.keywordSearch(query, (data, status) => {
-                    if (status === kakao.maps.services.Status.OK) {
-                        renderSearchResults(data);
-                    } else {
-                        showToast("검색 결과가 없습니다.");
-                        resultsBox.style.display = 'none';
-                    }
-                });
-            } else {
-                throw new Error("검색 응답 오류");
-            }
-
-        } catch (error) {
-            console.error("검색 에러:", error);
-            showToast("검색 결과가 없습니다.");
-            resultsBox.style.display = 'none';
-        } finally {
-            searchBtn.innerText = "검색";
-            searchBtn.disabled = false;
-        }
-    }
-
-    function renderSearchResults(items) {
-        resultsBox.innerHTML = '';
-        if (!items || items.length === 0) {
-            showToast("검색 결과가 없습니다.");
-            resultsBox.style.display = 'none';
+        if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services) {
+            showToast("카카오 검색 엔진을 로딩 중입니다.");
             return;
         }
 
-        items.slice(0, 6).forEach(item => {
-            const placeName = item.place_name || item.name;
-            const addr = item.road_address_name || item.address_name || '';
-            const lat = parseFloat(item.y || item.lat);
-            const lng = parseFloat(item.x || item.lng);
+        searchBtn.innerText = "검색중...";
+        searchBtn.disabled = true;
 
-            const div = document.createElement('div');
-            div.className = 'search-result-item';
-            div.innerHTML = `
-                <div class="res-info">
-                    <div class="res-title">${escapeHtml(placeName)}</div>
-                    <div class="res-addr">📍 ${escapeHtml(addr)}</div>
-                </div>
-                <button type="button" class="add-pin-btn">📍 핀 추가</button>
-            `;
-            div.querySelector('.add-pin-btn').addEventListener('click', () => {
-                addPlaceToDatabase(placeName, addr, lat, lng);
-            });
-            resultsBox.appendChild(div);
+        const ps = new kakao.maps.services.Places();
+        ps.keywordSearch(query, (data, status) => {
+            searchBtn.innerText = "검색";
+            searchBtn.disabled = false;
+            resultsList.innerHTML = '';
+
+            console.log("카카오 검색 응답 코드:", status, data);
+
+            if (status === kakao.maps.services.Status.OK) {
+                data.slice(0, 6).forEach(item => {
+                    const placeName = item.place_name;
+                    const addr = item.road_address_name || item.address_name || '';
+                    const lat = parseFloat(item.y);
+                    const lng = parseFloat(item.x);
+
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.innerHTML = `
+                        <div class="res-info">
+                            <div class="res-title">${escapeHtml(placeName)}</div>
+                            <div class="res-addr">📍 ${escapeHtml(addr)}</div>
+                        </div>
+                        <button type="button" class="add-pin-btn">📍 핀 추가</button>
+                    `;
+                    div.querySelector('.add-pin-btn').addEventListener('click', () => {
+                        addPlaceToDatabase(placeName, addr, lat, lng);
+                    });
+                    resultsList.appendChild(div);
+                });
+                resultsBox.style.display = 'flex';
+            } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+                showToast("검색 결과가 없습니다. (카카오맵 활성화 설정 ON 확인)");
+                resultsBox.style.display = 'none';
+            } else {
+                showToast("검색 오류 (카카오 개발자 콘솔의 카카오맵 활성화 및 도메인 확인)");
+                resultsBox.style.display = 'none';
+            }
         });
-
-        resultsBox.style.display = 'flex';
     }
 
-    // 선택한 장소를 Firebase에 저장하고 네이버 지도 핀 표시
+    // 2단계: 사용자가 선택한 장소만 Firebase에 저장하고 네이버 지도에 핀 표시
     async function addPlaceToDatabase(name, address, lat, lng) {
         try {
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
@@ -852,13 +839,6 @@
         }
     }
 
-    // 외부 클릭 시 검색 결과 드롭다운 닫기
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('#sidebar-panel')) {
-            resultsBox.style.display = 'none';
-        }
-    });
-
     // 추천순 자동 정렬 및 실시간 렌더링
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
@@ -877,7 +857,7 @@
             })).sort((a, b) => {
                 const aLikes = Object.keys(a.likes || {}).length;
                 const bLikes = Object.keys(b.likes || {}).length;
-                return bLikes - aLikes; // 추천순 자동 정렬
+                return bLikes - aLikes;
             });
 
             if (sitesArray.length === 0) {
@@ -898,6 +878,7 @@
                 const travel = calculateTravelInfo(lat, lng);
                 const thumbUrl = (site.img && !site.img.includes('favicon')) ? site.img : DEFAULT_THUMB;
 
+                // 네이버 지도 핀 생성
                 const position = new naver.maps.LatLng(lat, lng);
                 const marker = new naver.maps.Marker({
                     position: position,
