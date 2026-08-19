@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
     <!-- 네이버 지도 API -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -218,7 +218,19 @@
             box-shadow: 3px 3px 0 rgba(19, 23, 26, 0.45);
             overflow: hidden;
             pointer-events: auto;
-            transition: height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* PC 화면 확장 상태 (그리드 레이아웃) */
+        #sidebar-panel.expanded {
+            width: 840px;
+        }
+
+        #sidebar-panel.expanded .camp-list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 6px;
+            align-content: start;
         }
 
         .sheet-handle-bar {
@@ -250,6 +262,29 @@
             flex-shrink: 0;
             position: relative;
             z-index: 25;
+        }
+
+        .sidebar-top-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .desktop-expand-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--c-earth);
+            color: var(--c-camel);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+        }
+        .desktop-expand-btn:hover {
+            border-color: var(--c-camel);
         }
 
         .search-row {
@@ -868,10 +903,14 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* 📱 모바일 반응형 & iOS 드래그/스냅 바텀시트 */
+        /* 📱 모바일 반응형 */
         @media (max-width: 768px) {
             input, select, textarea {
                 font-size: 16px !important;
+            }
+
+            .desktop-expand-btn {
+                display: none !important;
             }
 
             .floating-top {
@@ -940,7 +979,7 @@
             <svg class="icon-svg" style="color:var(--c-camel);" width="14" height="14" viewBox="0 0 24 24">
                 <path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/>
             </svg>
-            <span>우리들의 캠핑장 아카이브</span>
+            <span>9/11~9/13 2박</span>
         </div>
         <div class="top-user" id="current-user-display"></div>
     </div>
@@ -953,6 +992,13 @@
         </div>
 
         <div class="sidebar-header">
+            <div class="sidebar-top-title-row">
+                <span style="font-weight: 800; font-size: 0.78em; color: var(--text-main);">캠핑장 검색 및 핀 추가</span>
+                <button type="button" id="desktop-expand-btn" class="desktop-expand-btn">
+                    <span id="desktop-expand-icon">⤢</span> <span id="desktop-expand-text">넓게보기</span>
+                </button>
+            </div>
+
             <div class="search-row">
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)" autocomplete="off" autocorrect="off" />
                 <button type="button" id="search-btn">검색</button>
@@ -1111,8 +1157,20 @@
 
     restoreSavedLogin();
 
-    // 📱 iOS 네이티브급 드래그 제스처 & 탭 토글 바텀시트
+    // 🖥️ PC 전용 넓게보기 토글
     const sidebarPanel = document.getElementById('sidebar-panel');
+    const desktopExpandBtn = document.getElementById('desktop-expand-btn');
+    const desktopExpandIcon = document.getElementById('desktop-expand-icon');
+    const desktopExpandText = document.getElementById('desktop-expand-text');
+
+    desktopExpandBtn.addEventListener('click', () => {
+        sidebarPanel.classList.toggle('expanded');
+        const isExp = sidebarPanel.classList.contains('expanded');
+        desktopExpandIcon.textContent = isExp ? '⤡' : '⤢';
+        desktopExpandText.textContent = isExp ? '원래대로' : '넓게보기';
+    });
+
+    // 📱 iOS 네이티브급 드래그 제스처 & 탭 토글 바텀시트
     const sheetHandle = document.getElementById('sheet-handle');
 
     let startY = 0;
@@ -1249,14 +1307,15 @@
         return results;
     }
 
-    // 💡 오류 수정 완료: 전경 대표 사진 선별 함수
+    // 💡 고화질 원본 우선 선별 및 시설 제외 정밀 함수
     async function fetchPlaceImage(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
             const searchQueries = [
-                `${placeName} 캠핑장 전경`,
-                `${placeName} 캠핑장 사이트`,
-                `${placeName} 캠핑장`,
+                `"${placeName}" 캠핑장 전경`,
+                `"${placeName}" 캠핑장 사이트`,
+                `"${placeName}" 캠핑장 야경`,
+                `"${placeName}" 캠핑장`,
                 `${placeName} ${cleanAddr} 캠핑장`
             ];
 
@@ -1272,7 +1331,7 @@
 
             const results = await Promise.all(fetchPromises);
             results.flat().forEach(item => {
-                const key = item.thumbnail_url || item.image_url;
+                const key = item.image_url || item.thumbnail_url;
                 if (key && !candidateMap.has(key)) {
                     candidateMap.set(key, item);
                 }
@@ -1289,7 +1348,7 @@
                 let combined = `${url} ${thumb} ${siteName} ${docUrl}`;
                 try { combined = decodeURIComponent(combined); } catch (e) {}
 
-                // 화장실/샤워실/개수대/세면대 영구 감점
+                // 시설 사진 절대 배제
                 if (/(화장실|샤워실|개수대|세면대|변기|소변기|욕실|toilet|restroom|washroom|bathroom|shower|wash)/i.test(combined)) {
                     return -999;
                 }
@@ -1320,10 +1379,11 @@
 
             if (scoredCandidates.length > 0 && scoredCandidates[0].score > -100) {
                 const best = scoredCandidates[0].item;
-                return best.thumbnail_url || best.image_url;
+                // 고화질 원본 우선 반환
+                return best.image_url || best.thumbnail_url;
             }
 
-            return candidates[0].thumbnail_url || candidates[0].image_url || DEFAULT_THUMB;
+            return candidates[0].image_url || candidates[0].thumbnail_url || DEFAULT_THUMB;
 
         } catch (err) {
             console.warn("이미지 선별 오류:", err);
@@ -1607,11 +1667,11 @@
                         <div class="travel-info">
                             <div class="travel-item">
                                 <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                <span>별양 ${travel['별양'].time}</span>
+                                <span>별양 ${travel['별양'].time} (${travel['별양'].distance}km)</span>
                             </div>
                             <div class="travel-item">
                                 <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                <span>망원 ${travel['망원'].time}</span>
+                                <span>망원 ${travel['망원'].time} (${travel['망원'].distance}km)</span>
                             </div>
                         </div>
                         <div class="card-author">by ${escapeHtml(site.recommender)}</div>
