@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>666 9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -158,12 +158,19 @@
             background-color: var(--bg-color);
         }
 
+        /* 🗺️ 네이버 지도 다크 톤 필터 (배경 지도 타일만 다크 변환, 핀 마커는 영향 없음) */
         #map {
             width: 100%;
             height: 100%;
             position: absolute;
             inset: 0;
             z-index: 1;
+            background: #232a30;
+        }
+        #map img[src*="naver.net"], 
+        #map img[src*="pstatic.net"], 
+        #map img[src*="openapi"] {
+            filter: invert(90%) hue-rotate(185deg) brightness(85%) contrast(110%) saturate(85%) !important;
         }
 
         .floating-top {
@@ -318,7 +325,6 @@
             white-space: nowrap;
         }
 
-        /* 🎛️ 정렬 필터 + 리스트/카드 모드 바 */
         .filter-controls-row {
             display: flex;
             gap: 4px;
@@ -354,7 +360,6 @@
             font-weight: 800;
         }
 
-        /* 📋 리스트/카드 뷰 모드 토글 버튼 */
         .view-mode-btn {
             padding: 4px 8px;
             font-size: 10px;
@@ -452,7 +457,7 @@
             white-space: nowrap;
         }
 
-        /* 카드 목록 */
+        /* 카드 목록 컨테이너 */
         .camp-list-container {
             flex: 1;
             overflow-y: auto;
@@ -652,7 +657,7 @@
             100% { transform: scale(1); }
         }
 
-        /* 2) 📋 [초밀도 리스트 뷰] 스타일 (폰에서 한 화면 8개 이상 동시 표시) */
+        /* 2) 📋 [초밀도 리스트 뷰] 스타일 */
         .camp-list-container.compact-mode {
             gap: 3px;
             padding: 4px;
@@ -664,7 +669,7 @@
         }
 
         .camp-list-container.compact-mode .camp-card-header {
-            display: none; /* 헤더 숨김 */
+            display: none;
         }
 
         .camp-list-container.compact-mode .camp-card-body {
@@ -723,7 +728,7 @@
         }
 
         .camp-list-container.compact-mode .side-action-btn.delete-btn {
-            display: none; /* 리스트 모드에선 지우기 생략하여 가로 폭 확보 */
+            display: none;
         }
 
         /* 📍 끝이 뾰족한 맞춤형 지도 마커 핀 */
@@ -844,6 +849,32 @@
             height: 100%;
             object-fit: cover;
             display: block;
+        }
+
+        /* ⭐ 대표사진 지정 체크 버튼 */
+        .set-rep-img-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(33, 38, 43, 0.85);
+            color: var(--text-main);
+            border: 1px solid var(--c-earth);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            z-index: 12;
+            backdrop-filter: blur(3px);
+            transition: 0.15s;
+        }
+        .set-rep-img-btn.is-rep {
+            background: var(--c-camel);
+            border-color: var(--c-camel);
+            color: #ffffff;
         }
 
         .slider-nav-btn {
@@ -1186,7 +1217,6 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
-        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1204,7 +1234,7 @@
                 <button type="button" id="search-btn">검색</button>
             </div>
 
-            <!-- 🎛️ 필터 + 리스트/카드 모드 바 -->
+            <!-- 필터 + 리스트/카드 모드 바 -->
             <div class="filter-controls-row">
                 <div class="sort-filter-bar">
                     <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
@@ -1228,11 +1258,17 @@
     </div>
 </div>
 
-<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (무한 루프 15장 슬라이더 탑재) -->
+<!-- 🌁 UX 브릿지 상세정보 팝업 모달 (대표사진 지정 버튼 탑재) -->
 <div id="detail-modal">
     <div class="detail-box">
         <div class="detail-slider-wrap" id="detail-slider">
             <div class="detail-slider-track" id="slider-track"></div>
+            
+            <!-- ⭐ 대표사진 지정 버튼 -->
+            <button type="button" class="set-rep-img-btn" id="set-rep-img-btn" title="현재 사진을 대표사진으로 설정">
+                <span id="rep-icon">✓</span> <span id="rep-text">대표 지정</span>
+            </button>
+
             <button type="button" class="slider-nav-btn" id="slider-prev">‹</button>
             <button type="button" class="slider-nav-btn" id="slider-next">›</button>
             <div class="slide-counter-badge" id="slide-counter">1 / 1</div>
@@ -1308,7 +1344,13 @@
     let markersMap = {};
     let sitesCache = {};
     let currentSortMode = 'likes';
-    let isCompactList = false; // 리스트/카드 모드 상태
+    let isCompactList = false;
+
+    // 현재 열려있는 상세 모달의 정보 추적
+    let activeDetailSiteId = null;
+    let currentModalImgList = [];
+    let currentSlideIdx = 0;
+    let currentSlideCount = 1;
 
     const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
     const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
@@ -1755,16 +1797,16 @@
         }
     }
 
-    // 🌁 무한 루프(Infinite Loop) 갤러리 슬라이더 & UX 브릿지 모달
+    // 🌁 무한 루프 갤러리 슬라이더 & 대표사진 지정 로직
     const detailModal = document.getElementById('detail-modal');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const sliderTrack = document.getElementById('slider-track');
     const sliderPrevBtn = document.getElementById('slider-prev');
     const sliderNextBtn = document.getElementById('slider-next');
     const slideCounter = document.getElementById('slide-counter');
-
-    let currentSlideIdx = 0;
-    let currentSlideCount = 1;
+    const setRepImgBtn = document.getElementById('set-rep-img-btn');
+    const repIcon = document.getElementById('rep-icon');
+    const repText = document.getElementById('rep-text');
 
     modalCloseBtn.addEventListener('click', () => { detailModal.style.display = 'none'; });
     detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.style.display = 'none'; });
@@ -1772,9 +1814,44 @@
     function updateSliderPosition() {
         sliderTrack.style.transform = `translateX(-${currentSlideIdx * 100}%)`;
         slideCounter.textContent = `${currentSlideIdx + 1} / ${currentSlideCount}`;
+
+        // 현재 보고 있는 사진이 해당 캠핑장의 대표사진인지 검사하여 버튼 스타일 동기화
+        if (activeDetailSiteId && sitesCache[activeDetailSiteId]) {
+            const currentImgUrl = currentModalImgList[currentSlideIdx];
+            const currentRepImg = sitesCache[activeDetailSiteId].img;
+
+            if (currentImgUrl === currentRepImg) {
+                setRepImgBtn.classList.add('is-rep');
+                repIcon.textContent = '★';
+                repText.textContent = '대표사진';
+            } else {
+                setRepImgBtn.classList.remove('is-rep');
+                repIcon.textContent = '✓';
+                repText.textContent = '대표 지정';
+            }
+        }
     }
 
-    // 🔄 무한 루프 네비게이션
+    // ⭐ 대표 사진 지정 클릭 이벤트
+    setRepImgBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!activeDetailSiteId || !currentModalImgList.length) return;
+
+        const chosenImg = currentModalImgList[currentSlideIdx];
+        try {
+            await update(ref(db, `sites/${activeDetailSiteId}`), { img: chosenImg });
+            if (sitesCache[activeDetailSiteId]) {
+                sitesCache[activeDetailSiteId].img = chosenImg;
+            }
+            showToast("대표 사진이 변경되었습니다!");
+            updateSliderPosition();
+            renderSitesList();
+        } catch (err) {
+            showToast("대표 사진 변경 실패");
+        }
+    });
+
+    // 🔄 무한 루프 슬라이더 이동
     sliderPrevBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (currentSlideCount <= 1) return;
@@ -1803,10 +1880,10 @@
 
         if (currentSlideCount <= 1) return;
 
-        if (diffX > 35) { // 다음 사진 (루프)
+        if (diffX > 35) {
             currentSlideIdx = (currentSlideIdx + 1) % currentSlideCount;
             updateSliderPosition();
-        } else if (diffX < -35) { // 이전 사진 (루프)
+        } else if (diffX < -35) {
             currentSlideIdx = (currentSlideIdx - 1 + currentSlideCount) % currentSlideCount;
             updateSliderPosition();
         }
@@ -1816,17 +1893,19 @@
         const site = sitesCache[siteId];
         if (!site) return;
 
+        activeDetailSiteId = siteId;
+
         const lat = site.lat || 37.5666;
         const lng = site.lng || 126.9784;
         const travel = calculateTravelInfo(lat, lng);
 
-        let imgList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
+        currentModalImgList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
 
         sliderTrack.innerHTML = '';
         currentSlideIdx = 0;
-        currentSlideCount = imgList.length;
+        currentSlideCount = currentModalImgList.length;
 
-        imgList.forEach((src, idx) => {
+        currentModalImgList.forEach((src, idx) => {
             const slide = document.createElement('div');
             slide.className = 'detail-slide';
             slide.innerHTML = `<img referrerpolicy="no-referrer" src="${escapeHtml(src)}" alt="캠핑장 사진 ${idx+1}" onerror="this.src='${DEFAULT_THUMB}'" />`;
@@ -1867,7 +1946,6 @@
         }
     };
 
-    // 🔴 안 읽은 댓글 개수 계산 헬퍼
     function getUnreadCommentCount(siteId, commentsObj) {
         if (!commentsObj || Object.keys(commentsObj).length === 0) return 0;
         const lastSeen = Number(localStorage.getItem(`lastSeen_${siteId}_${currentUser}`) || 0);
@@ -1881,7 +1959,6 @@
         return unread;
     }
 
-    // 실시간 리스트 렌더링 (카드 모드 & 리스트 모드 100% 대응)
     function renderSitesList() {
         const listContainer = document.getElementById('camp-list');
         listContainer.innerHTML = '';
@@ -1959,7 +2036,6 @@
                 openDetailBridge(site.id); 
             };
 
-            // 1) 리스트 모드 렌더링
             if (isCompactList) {
                 card.innerHTML = `
                     <div class="camp-card-body">
@@ -1988,7 +2064,6 @@
                     </div>
                 `;
             } else {
-                // 2) 일반 카드 뷰 렌더링
                 card.innerHTML = `
                     <div class="camp-card-header">
                         <span style="display:flex; align-items:center; gap:4px;">
@@ -2110,7 +2185,6 @@
         activeChatSiteId = siteId;
         const siteRef = ref(db, `sites/${siteId}/comments`);
 
-        // 🔴 읽음 시점 갱신 (배지 즉시 제거)
         localStorage.setItem(`lastSeen_${siteId}_${currentUser}`, Date.now());
         renderSitesList();
 
