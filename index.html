@@ -761,8 +761,10 @@
             transform: translate(-50%, -100%);
             padding-bottom: 6px;
             cursor: pointer;
+            user-select: none;
         }
 
+        /* 기본 마커 (하트 0개): 어두운 배경 + 밝은 글씨 */
         .custom-map-pin {
             background: var(--c-charcoal);
             color: var(--text-main);
@@ -771,12 +773,13 @@
             font-weight: 800;
             font-size: 10px;
             border: 1.5px solid var(--c-camel);
-            box-shadow: 0 2px 5px rgba(19, 23, 26, 0.5);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            gap: 3px;
+            gap: 3.5px;
             position: relative;
+            transition: 0.15s;
         }
 
         .custom-map-pin::after {
@@ -806,12 +809,50 @@
             z-index: 1;
         }
 
-        .custom-map-pin-wrap:hover .custom-map-pin {
-            background: var(--c-blue);
-            border-color: var(--text-main);
+        /* 💖 추천받은 마커 (하트 1개 이상): 밝은 배경 + 어두운 글씨로 한눈에 강조 */
+        .custom-map-pin-wrap.has-likes .custom-map-pin {
+            background: var(--text-main) !important;
+            color: var(--c-charcoal) !important;
+            border: 1.8px solid var(--c-camel) !important;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.3);
+            font-weight: 900;
         }
-        .custom-map-pin-wrap:hover .custom-map-pin::after { border-top-color: var(--text-main); }
-        .custom-map-pin-wrap:hover .custom-map-pin::before { border-top-color: var(--c-blue); }
+
+        .custom-map-pin-wrap.has-likes .custom-map-pin::before {
+            border-top: 5px solid var(--text-main) !important;
+        }
+
+        .pin-like-badge {
+            font-size: 8.5px;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            gap: 1.5px;
+            padding: 1px 3px;
+            border-radius: 3px;
+            line-height: 1;
+        }
+
+        /* 하트가 있을 때 핀 내부의 하트 뱃지 */
+        .custom-map-pin-wrap.has-likes .pin-like-badge {
+            background: rgba(181, 83, 74, 0.15);
+            color: var(--danger);
+        }
+
+        /* 하트가 0개일 때 핀 내부의 하트 뱃지 */
+        .custom-map-pin-wrap:not(.has-likes) .pin-like-badge {
+            color: var(--text-sub);
+            opacity: 0.65;
+        }
+
+        .custom-map-pin-wrap:hover .custom-map-pin {
+            background: var(--c-blue) !important;
+            color: #ffffff !important;
+            border-color: #ffffff !important;
+        }
+        .custom-map-pin-wrap:hover .custom-map-pin::after { border-top-color: #ffffff !important; }
+        .custom-map-pin-wrap:hover .custom-map-pin::before { border-top-color: var(--c-blue) !important; }
+        .custom-map-pin-wrap:hover .pin-like-badge { color: #ffffff !important; background: transparent !important; opacity: 1; }
 
         /* 🌁 UX 브릿지 상세정보 팝업 모달 */
         #detail-modal {
@@ -1058,7 +1099,7 @@
             border: 1px solid #e0ca00;
         }
 
-        /* 🖼️ 전체화면 고화질 포토 뷰어 (Full-screen Lightbox) */
+        /* 🖼️ 전체화면 고화질 포토 뷰어 */
         #fullscreen-viewer {
             position: fixed;
             inset: 0;
@@ -1360,6 +1401,7 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
+        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -1458,7 +1500,7 @@
     </div>
 </div>
 
-<!-- 🖼️ 전체화면 고화질 포토 뷰어 (Full-screen Lightbox) -->
+<!-- 🖼️ 전체화면 고화질 포토 뷰어 -->
 <div id="fullscreen-viewer">
     <div class="fullscreen-topbar">
         <span class="fullscreen-counter" id="fullscreen-counter">1 / 15</span>
@@ -2057,17 +2099,38 @@
         }
     }
 
+    // ⭐ 대표 사진 지정 클릭 이벤트: 선택한 사진을 인덱스 1번(0번째)으로 재배치하여 저장
     setRepImgBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!activeDetailSiteId || !currentModalImgList.length) return;
 
         const chosenImg = currentModalImgList[currentSlideIdx];
         try {
-            await update(ref(db, `sites/${activeDetailSiteId}`), { img: chosenImg });
+            const reorderedImages = [chosenImg, ...currentModalImgList.filter(u => u !== chosenImg)];
+
+            await update(ref(db, `sites/${activeDetailSiteId}`), { 
+                img: chosenImg,
+                images: reorderedImages
+            });
+
             if (sitesCache[activeDetailSiteId]) {
                 sitesCache[activeDetailSiteId].img = chosenImg;
+                sitesCache[activeDetailSiteId].images = reorderedImages;
             }
-            showToast("대표 사진이 변경되었습니다!");
+
+            currentModalImgList = reorderedImages;
+            currentSlideIdx = 0;
+            currentSlideCount = currentModalImgList.length;
+
+            sliderTrack.innerHTML = '';
+            currentModalImgList.forEach((src, idx) => {
+                const slide = document.createElement('div');
+                slide.className = 'detail-slide';
+                slide.innerHTML = `<img referrerpolicy="no-referrer" src="${escapeHtml(src)}" alt="캠핑장 사진 ${idx+1}" onerror="this.src='${DEFAULT_THUMB}'" />`;
+                sliderTrack.appendChild(slide);
+            });
+
+            showToast("대표 사진으로 설정되어 1번에 배치되었습니다!");
             updateSliderPosition();
             renderSitesList();
         } catch (err) {
@@ -2156,7 +2219,7 @@
 
     function closeFullscreenViewer() {
         fullscreenViewer.style.display = 'none';
-        currentSlideIdx = fullscreenIdx; // 상세 모달 위치와 동기화
+        currentSlideIdx = fullscreenIdx;
         updateSliderPosition();
     }
 
@@ -2176,7 +2239,6 @@
         updateFullscreenPosition();
     });
 
-    // 전체화면 터치 스와이프
     let fsTouchStartX = 0;
     fullscreenWrap.addEventListener('touchstart', (e) => {
         fsTouchStartX = e.touches[0].clientX;
@@ -2197,7 +2259,6 @@
         }
     }, { passive: true });
 
-    // 키보드 방향키 및 ESC 지원
     window.addEventListener('keydown', (e) => {
         if (fullscreenViewer.style.display === 'flex') {
             if (e.key === 'ArrowLeft') {
@@ -2212,6 +2273,7 @@
         }
     });
 
+    // 🌁 상세 모달 열기: 대표사진이 언제나 1번(인덱스 0)으로 오도록 보장
     window.openDetailBridge = async (siteId) => {
         const site = sitesCache[siteId];
         if (!site) return;
@@ -2222,7 +2284,11 @@
         const lng = site.lng || 126.9784;
         const travel = calculateTravelInfo(lat, lng);
 
-        currentModalImgList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
+        let rawList = (site.images && site.images.length > 0) ? site.images : [site.img || DEFAULT_THUMB];
+        const repImg = site.img || rawList[0] || DEFAULT_THUMB;
+
+        // 대표사진(site.img)을 항상 목록의 1번(0번째 인덱스)으로 정렬
+        currentModalImgList = [repImg, ...rawList.filter(u => u !== repImg)];
 
         sliderTrack.innerHTML = '';
         currentSlideIdx = 0;
@@ -2263,7 +2329,8 @@
         if (!site.images || site.images.length <= 1) {
             fetchPlaceImages(site.campName, site.address).then(newImgs => {
                 if (newImgs && newImgs.length > 1) {
-                    update(ref(db, `sites/${siteId}`), { images: newImgs });
+                    const finalSyncList = [repImg, ...newImgs.filter(u => u !== repImg)];
+                    update(ref(db, `sites/${siteId}`), { images: finalSyncList });
                 }
             });
         }
@@ -2282,6 +2349,7 @@
         return unread;
     }
 
+    // 🌟 가중 참여 점수 인기순 정렬 및 지도 마커 렌더링
     function renderSitesList() {
         const listContainer = document.getElementById('camp-list');
         listContainer.innerHTML = '';
@@ -2343,15 +2411,20 @@
 
             const position = new naver.maps.LatLng(lat, lng);
             
+            // 📍 하트 1개 이상 유무에 따라 클래스 부여 및 하트수 뱃지 표기
+            const hasLikesClass = likeCount > 0 ? 'has-likes' : '';
+            const tentIconColor = likeCount > 0 ? 'var(--c-camel)' : 'var(--c-camel)';
+
             const marker = new naver.maps.Marker({
                 position: position,
                 map: map,
                 icon: {
                     content: `
-                        <div class="custom-map-pin-wrap" onclick="openDetailBridge('${site.id}')">
+                        <div class="custom-map-pin-wrap ${hasLikesClass}" onclick="openDetailBridge('${site.id}')">
                             <div class="custom-map-pin">
-                                <svg class="icon-svg" style="color:var(--c-camel);" width="11" height="11" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
+                                <svg class="icon-svg" style="color:${tentIconColor};" width="11" height="11" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
                                 <span>${escapeHtml(site.campName)}</span>
+                                <span class="pin-like-badge">♥ ${likeCount}</span>
                             </div>
                         </div>
                     `,
@@ -2477,7 +2550,13 @@
             img: trimmed,
             images: updatedImages
         })
-        .then(() => showToast("사진이 변경되었습니다."))
+        .then(() => {
+            if (sitesCache[siteId]) {
+                sitesCache[siteId].img = trimmed;
+                sitesCache[siteId].images = updatedImages;
+            }
+            showToast("대표 사진이 변경되었습니다.");
+        })
         .catch(err => alert("수정 실패: " + err.message));
     };
 
