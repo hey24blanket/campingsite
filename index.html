@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>9/11~9/13 2박 - 캠핑장 아카이브</title>
+    <title>ㅅㅅ 9/11~9/13 2박 - 캠핑장 아카이브</title>
     
     <!-- 📱 스마트폰 홈 화면 추가(PWA) 지원 메타 태그 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2056,6 +2056,7 @@
         return unread;
     }
 
+    // 🌟 가중 참여 점수(Weighted Engagement Score) 인기순 정렬 적용
     function renderSitesList() {
         const listContainer = document.getElementById('camp-list');
         listContainer.innerHTML = '';
@@ -2079,7 +2080,17 @@
             if (currentSortMode === 'likes') {
                 const aLikes = Object.keys(a.likes || {}).length;
                 const bLikes = Object.keys(b.likes || {}).length;
-                return bLikes - aLikes;
+                const aComments = Object.keys(a.comments || {}).length;
+                const bComments = Object.keys(b.comments || {}).length;
+
+                // 쇼핑몰/커뮤니티 가중 결합 인기순 공식 (하트: 3점, 댓글: 1.5점)
+                const aScore = (aLikes * 3) + (aComments * 1.5);
+                const bScore = (bLikes * 3) + (bComments * 1.5);
+
+                if (bScore !== aScore) {
+                    return bScore - aScore;
+                }
+                return bLikes - aLikes; // 동점 시 하트 수가 더 많은 순
             } else if (currentSortMode === 'byeolyang') {
                 const aDist = calculateTravelInfo(a.lat || 37.5666, a.lng || 126.9784)['별양'].distKmVal;
                 const bDist = calculateTravelInfo(b.lat || 37.5666, b.lng || 126.9784)['별양'].distKmVal;
