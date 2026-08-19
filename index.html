@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>3333우리들의 캠핑장 아카이브 - 지도 에디션</title>
+    <title>777우리들의 캠핑장 아카이브 - 지도 에디션</title>
     <!-- 네이버 지도 API (지도 렌더링용) -->
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qzaz64ickn"></script>
     <!-- 카카오 장소 검색 API -->
@@ -156,7 +156,7 @@
             pointer-events: auto;
         }
 
-        /* 좌측 캠핑장 패널 */
+        /* 좌측 패널 */
         #sidebar-panel {
             position: absolute;
             top: 80px;
@@ -569,7 +569,7 @@
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)">
                 <button type="button" id="search-btn">검색</button>
             </div>
-            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (핀 추가 시 실제 사진이 자동 연동됩니다)</div>
+            <div style="font-size: 0.75em; color: var(--text-sub);">추천순 자동 정렬 (전경 사진이 우선 연동됩니다)</div>
 
             <div id="search-results-box">
                 <div class="search-box-title">
@@ -738,12 +738,19 @@
         return results;
     }
 
-    // 카카오 이미지 검색 API를 통해 실제 캠핑장 사진 자동 획득
+    // 전경 사진/야경 사진을 우선적으로 가져오도록 검색 쿼리 정밀 보정
     async function fetchPlaceImage(placeName) {
         try {
-            const searchTerms = [`${placeName} 캠핑장`, placeName];
-            for (const term of searchTerms) {
-                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(term)}&size=5&sort=accuracy`;
+            // 화장실, 내부 등의 단어를 제외하고 캠핑장 전경 위주로 탐색
+            const searchQueries = [
+                `${placeName} 캠핑장 야경`,
+                `${placeName} 캠핑장 전경`,
+                `${placeName} 캠핑장 텐트`,
+                `${placeName} 캠핑장`
+            ];
+
+            for (const query of searchQueries) {
+                const imgUrl = `https://dapi.kakao.com/v2/search/image?query=${encodeURIComponent(query)}&size=10&sort=accuracy`;
                 const response = await fetch(imgUrl, {
                     headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
                 });
@@ -751,9 +758,15 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.documents && data.documents.length > 0) {
-                        const item = data.documents[0];
-                        // 보안 차단이 없는 카카오 CDN 썸네일 또는 원본 이미지 반환
-                        return item.image_url || item.thumbnail_url;
+                        // 화장실이나 내부 시설 관련 키워드가 포함된 이미지는 건너뛰고 전경 사진 선택
+                        for (const doc of data.documents) {
+                            const docUrl = (doc.image_url || doc.thumbnail_url).toLowerCase();
+                            const docName = (doc.display_sitename || "").toLowerCase();
+                            if (!docUrl.includes('toilet') && !docUrl.includes('restroom') && !docName.includes('화장실')) {
+                                return doc.image_url || doc.thumbnail_url;
+                            }
+                        }
+                        return data.documents[0].image_url || data.documents[0].thumbnail_url;
                     }
                 }
             }
@@ -857,10 +870,10 @@
         resultsBox.style.display = 'flex';
     }
 
-    // 실제 캠핑장 사진 자동 등록 및 Firebase 저장
+    // 캠핑장 전경 사진 자동 등록 및 Firebase 저장
     async function addPlaceToDatabase(name, address, lat, lng) {
         try {
-            showToast(`'${name}' 사진과 정보를 불러오는 중...`, 2000);
+            showToast(`'${name}' 멋진 전경 사진을 찾는 중...`, 2000);
             
             const realImg = await fetchPlaceImage(name);
             const naverSearchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
@@ -880,7 +893,7 @@
 
             searchInput.value = '';
             resultsBox.style.display = 'none';
-            showToast(`'${name}' 핀과 사진이 등록되었습니다!`);
+            showToast(`'${name}' 핀과 전경 사진이 등록되었습니다!`);
 
             if (map) {
                 map.setCenter(new naver.maps.LatLng(lat, lng));
@@ -892,7 +905,7 @@
         }
     }
 
-    // 실시간 렌더링 (referrerpolicy="no-referrer" 적용으로 외부 사진 차단 방지)
+    // 실시간 렌더링
     function setupFirebaseListener() {
         onValue(ref(db, 'sites'), (snapshot) => {
             const listContainer = document.getElementById('camp-list');
