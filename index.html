@@ -62,7 +62,6 @@
         button { cursor: pointer; font-weight: bold; transition: 0.15s; user-select: none; }
         button:active { opacity: 0.85; }
 
-        /* 톤 매칭 SVG 아이콘 공통 */
         .icon-svg {
             display: inline-block;
             vertical-align: middle;
@@ -141,7 +140,7 @@
             padding: 8px;
         }
 
-        /* 메인 화면 */
+        /* 메인 화면 레이아웃 */
         #main-page {
             position: relative;
             width: 100vw;
@@ -202,7 +201,7 @@
             white-space: nowrap;
         }
 
-        /* 📱 iOS 지도 바텀시트 / PC 좌측 플로팅 패널 */
+        /* 바텀시트 / 사이드바 패널 */
         #sidebar-panel {
             position: absolute;
             top: 50px;
@@ -219,26 +218,27 @@
             box-shadow: 3px 3px 0 rgba(19, 23, 26, 0.45);
             overflow: hidden;
             pointer-events: auto;
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* iOS 스타일 드래그/탭 핸들 바 (모바일 전용) */
+        /* iOS 드래그 핸들 바 */
         .sheet-handle-bar {
             display: none;
             width: 100%;
-            padding: 8px 0 4px 0;
+            padding: 10px 0 6px 0;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            cursor: grab;
             touch-action: none;
+            background: var(--card-surface);
         }
+        .sheet-handle-bar:active { cursor: grabbing; }
 
         .sheet-handle-pill {
-            width: 38px;
+            width: 40px;
             height: 4px;
             background-color: var(--c-earth);
             border-radius: 999px;
-            opacity: 0.8;
         }
 
         .sidebar-header {
@@ -247,7 +247,7 @@
             background: var(--card-surface);
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
             flex-shrink: 0;
             position: relative;
             z-index: 25;
@@ -275,6 +275,34 @@
             padding: 6px 10px;
             font-size: 11.5px;
             white-space: nowrap;
+        }
+
+        /* 🎛️ 정렬 필터 탭 바 */
+        .sort-filter-bar {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .sort-btn {
+            flex: 1;
+            padding: 4px 0;
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--input-bg);
+            color: var(--text-sub);
+            border: 1px solid var(--c-earth);
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.15s;
+        }
+
+        .sort-btn.active {
+            background: var(--c-camel);
+            border-color: var(--c-camel);
+            color: var(--text-main);
+            font-weight: 800;
         }
 
         #search-results-box {
@@ -359,7 +387,7 @@
             white-space: nowrap;
         }
 
-        /* 카드 리스트 컨테이너 */
+        /* 카드 목록 */
         .camp-list-container {
             flex: 1;
             overflow-y: auto;
@@ -373,7 +401,7 @@
             background: var(--c-charcoal);
         }
 
-        /* ✨ 우측 액션 열(하트/댓글) 3단 분리 콤팩트 카드 */
+        /* 카드 스타일 */
         .camp-card {
             border: 1px solid var(--c-earth);
             background: var(--card-surface);
@@ -384,7 +412,7 @@
             box-shadow: 0 1px 3px rgba(19, 23, 26, 0.25);
             flex-shrink: 0;
             cursor: pointer;
-            transition: transform 0.1s ease, border-color 0.15s ease;
+            transition: border-color 0.15s ease;
         }
         .camp-card:hover {
             border-color: var(--c-camel);
@@ -409,7 +437,6 @@
             align-items: center;
         }
 
-        /* 좌측: 썸네일 */
         .thumb-wrap {
             position: relative;
             width: 58px;
@@ -442,7 +469,6 @@
             font-weight: bold;
         }
 
-        /* 중앙: 주소 & 소요시간 */
         .card-center {
             flex: 1;
             display: flex;
@@ -489,7 +515,6 @@
             margin-top: 1px;
         }
 
-        /* ✨ 우측: 큼직하고 명확한 하트/댓글 액션 열 */
         .card-right-actions {
             display: flex;
             flex-direction: column;
@@ -620,7 +645,7 @@
         .detail-img-wrap {
             position: relative;
             width: 100%;
-            height: 180px;
+            height: 200px;
             background: #232A30;
         }
 
@@ -628,6 +653,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
         .detail-close-btn {
@@ -843,7 +869,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* 📱 iOS 네이티브 3단 바텀시트 반응형 */
+        /* 📱 모바일 반응형 & iOS 드래그/스냅 바텀시트 */
         @media (max-width: 768px) {
             input, select, textarea {
                 font-size: 16px !important;
@@ -868,7 +894,6 @@
                 display: flex;
             }
 
-            /* iOS 바텀시트 상태 */
             #sidebar-panel {
                 top: auto;
                 left: 0;
@@ -881,17 +906,7 @@
                 border-left: none;
                 border-right: none;
                 padding-bottom: env(safe-area-inset-bottom);
-                height: 48dvh; /* 기본 절반 뷰 */
-            }
-
-            /* 1단: 피크 뷰 (검색창만 미니 노출) */
-            #sidebar-panel.sheet-peek {
-                height: 105px;
-            }
-
-            /* 3단: 전체 화면 뷰 */
-            #sidebar-panel.sheet-full {
-                height: 82dvh;
+                height: 48dvh;
             }
         }
     </style>
@@ -933,7 +948,7 @@
 
     <!-- 바텀시트 / 사이드바 패널 -->
     <div id="sidebar-panel">
-        <!-- 📱 iOS 직관적 드래그/탭 핸들 -->
+        <!-- 📱 iOS 직관적 드래그 & 터치 핸들 -->
         <div class="sheet-handle-bar" id="sheet-handle">
             <div class="sheet-handle-pill"></div>
         </div>
@@ -942,6 +957,13 @@
             <div class="search-row">
                 <input type="text" id="camp-search-input" placeholder="캠핑장 이름 (예: 아롱별캠핑장)" autocomplete="off" autocorrect="off" />
                 <button type="button" id="search-btn">검색</button>
+            </div>
+
+            <!-- 🎛️ 추천순 / 별양거리순 / 망원거리순 정렬 필터 바 -->
+            <div class="sort-filter-bar">
+                <button type="button" class="sort-btn active" data-sort="likes">추천순</button>
+                <button type="button" class="sort-btn" data-sort="byeolyang">별양거리순</button>
+                <button type="button" class="sort-btn" data-sort="mangwon">망원거리순</button>
             </div>
 
             <div id="search-results-box">
@@ -960,7 +982,7 @@
 <div id="detail-modal">
     <div class="detail-box">
         <div class="detail-img-wrap">
-            <img class="detail-img" id="modal-img" src="" alt="전경 사진" />
+            <img class="detail-img" id="modal-img" referrerpolicy="no-referrer" src="" alt="전경 사진" onerror="this.src=DEFAULT_THUMB" />
             <button type="button" class="detail-close-btn" id="modal-close-btn">✕</button>
         </div>
         <div class="detail-body">
@@ -1031,9 +1053,10 @@
     let map = null;
     let markersMap = {};
     let sitesCache = {};
+    let currentSortMode = 'likes'; // 'likes' | 'byeolyang' | 'mangwon'
 
     const KAKAO_REST_KEY = "6bdf40c0cfc41a6f29cc9602f2e399c1";
-    const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80";
+    const DEFAULT_THUMB = "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80";
 
     const POINT_BYEOLYANG = { lat: 37.4292, lng: 126.9877, name: '별양' };
     const POINT_MANGWON = { lat: 37.5559, lng: 126.9015, name: '망원' };
@@ -1089,21 +1112,72 @@
 
     restoreSavedLogin();
 
-    // 📱 iOS 스타일 직관적 바텀시트 (탭/터치 시 3단계 순환: 기본 -> 전체 -> 최소화)
+    // 📱 iOS 네이티브급 드래그 제스처 & 탭 토글 바텀시트
     const sidebarPanel = document.getElementById('sidebar-panel');
     const sheetHandle = document.getElementById('sheet-handle');
 
-    sheetHandle.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            if (sidebarPanel.classList.contains('sheet-peek')) {
-                sidebarPanel.classList.remove('sheet-peek');
-            } else if (!sidebarPanel.classList.contains('sheet-full')) {
-                sidebarPanel.classList.add('sheet-full');
-            } else {
-                sidebarPanel.classList.remove('sheet-full');
-                sidebarPanel.classList.add('sheet-peek');
-            }
+    let startY = 0;
+    let startHeight = 0;
+    let isDragging = false;
+
+    sheetHandle.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768) return;
+        isDragging = true;
+        startY = e.touches[0].clientY;
+        startHeight = sidebarPanel.getBoundingClientRect().height;
+        sidebarPanel.style.transition = 'none';
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const currentY = e.touches[0].clientY;
+        const diff = startY - currentY;
+        const newHeight = Math.max(100, Math.min(window.innerHeight * 0.88, startHeight + diff));
+        sidebarPanel.style.height = `${newHeight}px`;
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        sidebarPanel.style.transition = 'height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        
+        const currentH = sidebarPanel.getBoundingClientRect().height;
+        const vh = window.innerHeight;
+
+        // 드래그 위치에 따라 3단계 자동 스냅 (최소화 / 절반 / 전체)
+        if (currentH < vh * 0.28) {
+            sidebarPanel.style.height = '105px';
+        } else if (currentH > vh * 0.65) {
+            sidebarPanel.style.height = '82dvh';
+        } else {
+            sidebarPanel.style.height = '48dvh';
         }
+    });
+
+    // 짧은 탭(클릭) 시 순환 토글 (기본 -> 전체 -> 최소화)
+    sheetHandle.addEventListener('click', () => {
+        if (window.innerWidth > 768) return;
+        const currentH = sidebarPanel.getBoundingClientRect().height;
+        const vh = window.innerHeight;
+        sidebarPanel.style.transition = 'height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+        if (currentH < vh * 0.25) {
+            sidebarPanel.style.height = '48dvh';
+        } else if (currentH < vh * 0.65) {
+            sidebarPanel.style.height = '82dvh';
+        } else {
+            sidebarPanel.style.height = '105px';
+        }
+    });
+
+    // 🎛️ 정렬 필터 버튼 이벤트
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentSortMode = btn.dataset.sort;
+            renderSitesList();
+        });
     });
 
     async function handleLogin() {
@@ -1171,13 +1245,14 @@
 
             results[pt.name] = {
                 distance: distKm.toFixed(1),
+                distKmVal: distKm,
                 time: totalMins < 60 ? `${totalMins}분` : `${Math.floor(totalMins/60)}시간 ${totalMins%60}분`
             };
         });
         return results;
     }
 
-    // 💡 다중 쿼리 + 통합 후보 30개 + 강력 화장실/시설 영구 배제 알고리즘
+    // 💡 고화질 원본 + 시설 제외 점수 알고리즘
     async function fetchPlaceImage(placeName, placeAddress) {
         try {
             const cleanAddr = (placeAddress || '').split(' ').slice(0, 2).join(' ');
@@ -1202,7 +1277,7 @@
 
             const results = await Promise.all(fetchPromises);
             results.flat().forEach(doc => {
-                const key = doc.thumbnail_url || doc.image_url;
+                const key = doc.image_url || doc.thumbnail_url;
                 if (key && !candidateMap.has(key)) {
                     candidateMap.set(key, doc);
                 }
@@ -1219,7 +1294,6 @@
                 let combined = `${url} ${thumb} ${siteName} ${docUrl}`;
                 try { combined = decodeURIComponent(combined); } catch (e) {}
 
-                // 화장실, 샤워실, 세면장, 개수대 등 시설 영구 배제
                 if (/(화장실|샤워실|개수대|세면대|변기|소변기|욕실|toilet|restroom|washroom|bathroom|shower|wash)/i.test(combined)) {
                     return -999;
                 }
@@ -1250,10 +1324,11 @@
 
             if (scoredCandidates.length > 0 && scoredCandidates[0].score > -100) {
                 const best = scoredCandidates[0].doc;
-                return best.thumbnail_url || best.image_url;
+                // 고화질 원본 우선 반환
+                return best.image_url || best.thumbnail_url;
             }
 
-            return candidates[0].thumbnail_url || DEFAULT_THUMB;
+            return candidates[0].image_url || candidates[0].thumbnail_url || DEFAULT_THUMB;
 
         } catch (err) {
             console.warn("이미지 선별 예외:", err);
@@ -1396,7 +1471,7 @@
         }
     }
 
-    // 🌁 UX 브릿지 상세정보 팝업 모달 함수
+    // 🌁 UX 브릿지 상세정보 팝업 모달
     const detailModal = document.getElementById('detail-modal');
     const modalCloseBtn = document.getElementById('modal-close-btn');
 
@@ -1412,7 +1487,9 @@
         const travel = calculateTravelInfo(lat, lng);
         const thumbUrl = site.img || DEFAULT_THUMB;
 
-        document.getElementById('modal-img').src = thumbUrl;
+        const modalImg = document.getElementById('modal-img');
+        modalImg.src = thumbUrl;
+        
         document.getElementById('modal-title').innerHTML = `
             <svg class="icon-svg" style="color:var(--c-camel);" width="16" height="16" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
             <span>${escapeHtml(site.campName)}</span>
@@ -1437,124 +1514,138 @@
         detailModal.style.display = 'flex';
     };
 
-    // ✨ 실시간 카드 렌더링 (우측 액션 열 3단 분리)
-    function setupFirebaseListener() {
-        onValue(ref(db, 'sites'), (snapshot) => {
-            const listContainer = document.getElementById('camp-list');
-            listContainer.innerHTML = '';
-            const data = snapshot.val() || {};
-            sitesCache = data;
+    // 실시간 리스트 렌더링 및 정렬 처리
+    function renderSitesList() {
+        const listContainer = document.getElementById('camp-list');
+        listContainer.innerHTML = '';
 
-            Object.values(markersMap).forEach(m => {
-                if (m.marker) m.marker.setMap(null);
-            });
-            markersMap = {};
+        Object.values(markersMap).forEach(m => {
+            if (m.marker) m.marker.setMap(null);
+        });
+        markersMap = {};
 
-            const sitesArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key]
-            })).sort((a, b) => {
+        const sitesArray = Object.keys(sitesCache).map(key => ({
+            id: key,
+            ...sitesCache[key]
+        }));
+
+        if (sitesArray.length === 0) {
+            listContainer.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:10px; font-size:10.5px;">등록된 캠핑장이 없습니다.</div>';
+            return;
+        }
+
+        // 정렬 모드 분기 (추천순 / 별양거리순 / 망원거리순)
+        sitesArray.sort((a, b) => {
+            if (currentSortMode === 'likes') {
                 const aLikes = Object.keys(a.likes || {}).length;
                 const bLikes = Object.keys(b.likes || {}).length;
                 return bLikes - aLikes;
-            });
-
-            if (sitesArray.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:10px; font-size:10.5px;">등록된 캠핑장이 없습니다.</div>';
-                return;
+            } else if (currentSortMode === 'byeolyang') {
+                const aDist = calculateTravelInfo(a.lat || 37.5666, a.lng || 126.9784)['별양'].distKmVal;
+                const bDist = calculateTravelInfo(b.lat || 37.5666, b.lng || 126.9784)['별양'].distKmVal;
+                return aDist - bDist;
+            } else if (currentSortMode === 'mangwon') {
+                const aDist = calculateTravelInfo(a.lat || 37.5666, a.lng || 126.9784)['망원'].distKmVal;
+                const bDist = calculateTravelInfo(b.lat || 37.5666, b.lng || 126.9784)['망원'].distKmVal;
+                return aDist - bDist;
             }
+            return 0;
+        });
 
-            sitesArray.forEach(site => {
-                const likes = site.likes || {};
-                const liked = likes[currentUser] ? 'active' : '';
-                const likeCount = Object.keys(likes).length;
+        sitesArray.forEach(site => {
+            const likes = site.likes || {};
+            const liked = likes[currentUser] ? 'active' : '';
+            const likeCount = Object.keys(likes).length;
 
-                const commentsObj = site.comments || {};
-                const totalCommentCount = Object.keys(commentsObj).length;
+            const commentsObj = site.comments || {};
+            const totalCommentCount = Object.keys(commentsObj).length;
 
-                const lat = site.lat || 37.5666;
-                const lng = site.lng || 126.9784;
-                const travel = calculateTravelInfo(lat, lng);
-                const thumbUrl = site.img || DEFAULT_THUMB;
+            const lat = site.lat || 37.5666;
+            const lng = site.lng || 126.9784;
+            const travel = calculateTravelInfo(lat, lng);
+            const thumbUrl = site.img || DEFAULT_THUMB;
 
-                const position = new naver.maps.LatLng(lat, lng);
-                
-                const marker = new naver.maps.Marker({
-                    position: position,
-                    map: map,
-                    icon: {
-                        content: `
-                            <div class="custom-map-pin-wrap" onclick="openDetailBridge('${site.id}')">
-                                <div class="custom-map-pin">
-                                    <svg class="icon-svg" style="color:var(--c-camel);" width="11" height="11" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
-                                    <span>${escapeHtml(site.campName)}</span>
-                                </div>
+            const position = new naver.maps.LatLng(lat, lng);
+            
+            const marker = new naver.maps.Marker({
+                position: position,
+                map: map,
+                icon: {
+                    content: `
+                        <div class="custom-map-pin-wrap" onclick="openDetailBridge('${site.id}')">
+                            <div class="custom-map-pin">
+                                <svg class="icon-svg" style="color:var(--c-camel);" width="11" height="11" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
+                                <span>${escapeHtml(site.campName)}</span>
                             </div>
-                        `,
-                        anchor: new naver.maps.Point(0, 0)
-                    }
-                });
-
-                markersMap[site.id] = { marker };
-
-                const card = document.createElement('div');
-                card.className = 'camp-card';
-                card.onclick = () => { 
-                    panToCamp(lat, lng);
-                    openDetailBridge(site.id); 
-                };
-                card.innerHTML = `
-                    <div class="camp-card-header">
-                        <span style="display:flex; align-items:center; gap:4px;">
-                            <svg class="icon-svg" style="color:var(--c-camel);" width="12" height="12" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
-                            <span>${escapeHtml(site.campName)}</span>
-                        </span>
-                        <span style="color:var(--c-camel); font-size:8px;">상세보기 ↗</span>
-                    </div>
-                    <div class="camp-card-body">
-                        <!-- 좌측: 썸네일 -->
-                        <div class="thumb-wrap">
-                            <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="캠핑장 사진" onerror="this.src='${DEFAULT_THUMB}'">
-                            <button class="thumb-edit-btn" onclick="event.stopPropagation(); editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
                         </div>
-                        
-                        <!-- 중앙: 정보 -->
-                        <div class="card-center">
-                            <div class="address-text" title="${escapeHtml(site.address)}">
-                                <svg class="icon-svg" style="color:var(--c-camel);" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                <span>${escapeHtml(site.address)}</span>
-                            </div>
-                            <div class="travel-info">
-                                <div class="travel-item">
-                                    <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                    <span>별양 ${travel['별양'].time}</span>
-                                </div>
-                                <div class="travel-item">
-                                    <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                    <span>망원 ${travel['망원'].time}</span>
-                                </div>
-                            </div>
-                            <div class="card-author">by ${escapeHtml(site.recommender)}</div>
-                        </div>
-
-                        <!-- ✨ 우측: 큼직한 액션 열 -->
-                        <div class="card-right-actions">
-                            <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
-                                <svg class="icon-svg" width="11" height="11" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                                <span>${likeCount}</span>
-                            </button>
-                            <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
-                                <svg class="icon-svg" style="color:var(--text-sub);" width="11" height="11" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-                                <span>${totalCommentCount}</span>
-                            </button>
-                            <button class="side-action-btn delete-btn" onclick="event.stopPropagation(); deleteCamp('${site.id}')" title="삭제">
-                                <span>삭제</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                listContainer.appendChild(card);
+                    `,
+                    anchor: new naver.maps.Point(0, 0)
+                }
             });
+
+            markersMap[site.id] = { marker };
+
+            const card = document.createElement('div');
+            card.className = 'camp-card';
+            card.onclick = () => { 
+                panToCamp(lat, lng);
+                openDetailBridge(site.id); 
+            };
+            card.innerHTML = `
+                <div class="camp-card-header">
+                    <span style="display:flex; align-items:center; gap:4px;">
+                        <svg class="icon-svg" style="color:var(--c-camel);" width="12" height="12" viewBox="0 0 24 24"><path d="M4 19h16l-7-14h-2L4 19zm8-10.5l4.5 9h-9l4.5-9z"/></svg>
+                        <span>${escapeHtml(site.campName)}</span>
+                    </span>
+                    <span style="color:var(--c-camel); font-size:8px;">상세보기 ↗</span>
+                </div>
+                <div class="camp-card-body">
+                    <div class="thumb-wrap">
+                        <img class="thumb" referrerpolicy="no-referrer" src="${escapeHtml(thumbUrl)}" alt="캠핑장 사진" onerror="this.src='${DEFAULT_THUMB}'">
+                        <button class="thumb-edit-btn" onclick="event.stopPropagation(); editCampThumb('${site.id}', '${escapeHtml(site.img || '')}')">수정</button>
+                    </div>
+                    
+                    <div class="card-center">
+                        <div class="address-text" title="${escapeHtml(site.address)}">
+                            <svg class="icon-svg" style="color:var(--c-camel);" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <span>${escapeHtml(site.address)}</span>
+                        </div>
+                        <div class="travel-info">
+                            <div class="travel-item">
+                                <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                                <span>별양 ${travel['별양'].time} (${travel['별양'].distance}km)</span>
+                            </div>
+                            <div class="travel-item">
+                                <svg class="icon-svg" style="color:var(--text-sub);" width="10" height="10" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                                <span>망원 ${travel['망원'].time} (${travel['망원'].distance}km)</span>
+                            </div>
+                        </div>
+                        <div class="card-author">by ${escapeHtml(site.recommender)}</div>
+                    </div>
+
+                    <div class="card-right-actions">
+                        <button class="side-action-btn heart-btn ${liked}" onclick="event.stopPropagation(); toggleLike('${site.id}')" title="추천">
+                            <svg class="icon-svg" width="11" height="11" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span>${likeCount}</span>
+                        </button>
+                        <button class="side-action-btn" onclick="event.stopPropagation(); toggleComments(event, '${site.id}')" title="댓글">
+                            <svg class="icon-svg" style="color:var(--text-sub);" width="11" height="11" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                            <span>${totalCommentCount}</span>
+                        </button>
+                        <button class="side-action-btn delete-btn" onclick="event.stopPropagation(); deleteCamp('${site.id}')" title="삭제">
+                            <span>삭제</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    function setupFirebaseListener() {
+        onValue(ref(db, 'sites'), (snapshot) => {
+            sitesCache = snapshot.val() || {};
+            renderSitesList();
         });
     }
 
